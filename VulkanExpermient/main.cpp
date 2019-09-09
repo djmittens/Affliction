@@ -10,6 +10,8 @@
 #include <map>
 #include <set>
 #include <algorithm>
+// Files and shit
+#include <fstream>
 
 /*
   Some serious TODO list for me to tackle at some point on this project.
@@ -112,6 +114,7 @@ private:
 		createLogicalDevice();
 		createSwapChain();
 		createImageViews();
+		createGraphicsPipeline();
 
 		{
 			uint32_t extensionCount = 0;
@@ -492,6 +495,7 @@ private:
 		VkDeviceCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
+		//TODO: we will need to figure out how to shave off some precision here to avoid overflows.
 		createInfo.queueCreateInfoCount = queueCreateInfos.size();
 		createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
@@ -665,6 +669,7 @@ private:
 			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 			createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
 			createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
 			createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			createInfo.subresourceRange.baseMipLevel = 0;
 			createInfo.subresourceRange.levelCount = 1;
@@ -675,6 +680,45 @@ private:
 				throw std::runtime_error("failed to create image views!");
 			}
 		}
+	}
+
+	// Graphics pipelines and shit
+	void createGraphicsPipeline() {
+		auto vertShaderModule = createShaderModule(readFile("shaders/helloworld.vert.spv"));
+		auto fragShaderModule = createShaderModule(readFile("shaders/helloworld.frag.spv"));
+
+		VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
+		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+		vertShaderStageInfo.module = vertShaderModule;
+		vertShaderStageInfo.pName = "main";
+
+		VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
+		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		fragShaderStageInfo.module = fragShaderModule;
+		fragShaderStageInfo.pName = "main";
+
+		VkPipelineShaderStageCreateInfo shaderStages[] = {
+			vertShaderStageInfo,
+			fragShaderStageInfo
+		};
+
+		vkDestroyShaderModule(device, fragShaderModule, nullptr);
+		vkDestroyShaderModule(device, vertShaderModule, nullptr);
+	}
+
+	VkShaderModule createShaderModule(const std::vector<char>& code) {
+		VkShaderModuleCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		createInfo.codeSize = code.size();
+		// This reinterpret cast is funny, because it turned a char array into a pointer, to raw bytes.
+		createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+		VkShaderModule shaderModule;
+		if (VK_SUCCESS != vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule)) {
+			throw std::runtime_error("failed to create shader module!");
+		}
+		return shaderModule;
 	}
 
 
@@ -691,6 +735,27 @@ private:
 			// An important message that we would show.
 		}
 		return VK_FALSE;
+	}
+
+	// Read the file in as bytes.
+	static std::vector<char> readFile(const std::string& filename) {
+		// ate means that we are reading from the end, which allows us to preallocate the array,
+		// given that we know the offset.
+		std::ifstream file(filename, std::ios::ate | std::ios::binary);
+		if (!file.is_open()) {
+			// TODO needs much more error handling.
+			throw std::runtime_error("failed to open file !");
+		}
+
+		size_t fileSize = (size_t)file.tellg();
+		std::vector<char> buffer(fileSize);
+
+		// read the file back to the beginning.
+		file.seekg(0);
+		file.read(buffer.data(), fileSize);
+
+		file.close();
+		return buffer; 
 	}
 };
 
