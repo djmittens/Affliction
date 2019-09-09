@@ -80,6 +80,7 @@ private:
 	std::vector<VkImageView> swapChainImageViews;
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
+	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 
 	VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -173,10 +174,10 @@ private:
 		}
 
 		if (VK_SUCCESS != vkCreateInstance(&createInfo, nullptr, &instance)) {
-			throw std::runtime_error("failed to create instance!");
+			throw std::runtime_error("failed to create a vulkan instance!");
 		}
 		else {
-			std::cout << "Successfully create a Vulkan instance !!!!" << ENDL;
+			std::cout << "Successfully created a Vulkan instance !!!!" << ENDL;
 		}
 	}
 
@@ -525,27 +526,6 @@ private:
 		std::cout << "created a logical device !" << ENDL;
 	}
 
-	void mainLoop() {
-		while (!glfwWindowShouldClose(window)) {
-			glfwPollEvents();
-		}
-	}
-
-	void cleanup() {
-		for (auto imageView : swapChainImageViews) {
-			vkDestroyImageView(device, imageView, nullptr);
-		}
-		vkDestroySwapchainKHR(device, swapChain, nullptr);
-		vkDestroyDevice(device, nullptr);
-		if (enableValidationLayers) {
-			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
-		}
-		vkDestroySurfaceKHR(instance, surface, nullptr);
-		vkDestroyInstance(instance, nullptr);
-		glfwDestroyWindow(window);
-		glfwTerminate();
-	}
-
 	void createSwapChain() {
 		//Create the actual swap chain
 		{
@@ -704,6 +684,135 @@ private:
 			fragShaderStageInfo
 		};
 
+		VkPipelineVertexInputStateCreateInfo vertInputInfo = {};
+		vertInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		vertInputInfo.vertexBindingDescriptionCount = 0;
+		vertInputInfo.pVertexBindingDescriptions = nullptr;
+		vertInputInfo.vertexAttributeDescriptionCount = 0;
+		vertInputInfo.pVertexAttributeDescriptions = nullptr;
+
+		VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
+		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+		// viewport doesnt have to follow swapchain dimensions, but we are going to do anyways.
+		VkViewport viewport = {};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = (float) swapChainExtent.width;
+		viewport.height = (float) swapChainExtent.height;
+		viewport.minDepth = 1.0f;
+		viewport.maxDepth = 1.0f;
+
+		//Draw the entire rectangle.
+		VkRect2D scissor = {};
+		scissor.offset = { 0,0 };
+		scissor.extent = swapChainExtent;
+
+		// Some graphics cards can create more than one, but a certain extensions will need to be enabled.
+		// For our use case we only create a single viewport.
+		// basically we just combine the two, into one state.
+		VkPipelineViewportStateCreateInfo viewportState = {};
+		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+		viewportState.viewportCount = 1;
+		viewportState.pViewports = &viewport;
+		viewportState.scissorCount = 1;
+		viewportState.pScissors = &scissor;
+
+		//Rasterizer
+
+		VkPipelineRasterizationStateCreateInfo rasterizer = {};
+		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+		rasterizer.depthClampEnable = VK_FALSE;
+
+		// If this were enabled its data would never pass through the rasterizer stage to the viewport.
+		rasterizer.rasterizerDiscardEnable = VK_FALSE;
+		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+		rasterizer.lineWidth = 1.0f;
+		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+
+		/// instead of clipping, vertices's that fall outside of the clipping space, are instead clamped to it.
+		/// apparently useful for shadows, but we need an extension loaded.
+		rasterizer.depthBiasEnable = VK_FALSE;
+		rasterizer.depthBiasConstantFactor = 0.0f;
+		rasterizer.depthBiasClamp = 0.0f;
+		rasterizer.depthBiasSlopeFactor = 0.0f;
+
+		//Multi sampling
+		// Basically this allows you to do antialiasing, but we disable it for now, to revisit later.
+		VkPipelineMultisampleStateCreateInfo multisampling = {};
+		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		multisampling.sampleShadingEnable = VK_FALSE;
+		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		multisampling.minSampleShading = 1.0f;
+		multisampling.pSampleMask = nullptr;
+		multisampling.alphaToCoverageEnable = VK_FALSE;
+		multisampling.alphaToOneEnable = VK_FALSE;
+		
+		// Depth and stencils
+		// we don't have any yet but we could use `VkPipelineDepthStencilStateCreateInfo` to create some
+
+		// Color Blending
+		// there are two ways to configure, this, one is globally the other is per framebuffer.
+		// in our case we only have one framebuffer, so we did it that way.
+		VkPipelineColorBlendAttachmentState colorBlend = {};
+		colorBlend.colorWriteMask =
+			VK_COLOR_COMPONENT_R_BIT |
+			VK_COLOR_COMPONENT_G_BIT |
+			VK_COLOR_COMPONENT_B_BIT |
+			VK_COLOR_COMPONENT_A_BIT;
+		colorBlend.blendEnable = VK_FALSE;
+		//colorBlend.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+		//colorBlend.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+		//colorBlend.colorBlendOp = VK_BLEND_OP_ADD;
+		//colorBlend.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		//colorBlend.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		//colorBlend.alphaBlendOp = VK_BLEND_OP_ADD;
+
+		colorBlend.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		colorBlend.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		colorBlend.colorBlendOp = VK_BLEND_OP_ADD;
+		colorBlend.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		colorBlend.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		colorBlend.alphaBlendOp = VK_BLEND_OP_ADD;
+
+		VkPipelineColorBlendStateCreateInfo blendState = {};
+		blendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		blendState.logicOpEnable = VK_FALSE;
+		blendState.logicOp = VK_LOGIC_OP_COPY;
+		blendState.attachmentCount = 1;
+		blendState.pAttachments = &colorBlend;
+		blendState.blendConstants[0] = 0.0f;
+		blendState.blendConstants[1] = 0.0f;
+		blendState.blendConstants[2] = 0.0f;
+		blendState.blendConstants[3] = 0.0f;
+
+		// Dynamic state
+		VkDynamicState dynamicStates[] = {
+			VK_DYNAMIC_STATE_VIEWPORT,
+			VK_DYNAMIC_STATE_LINE_WIDTH
+		};
+
+		VkPipelineDynamicStateCreateInfo dynamicState = {};
+		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		dynamicState.dynamicStateCount = 2;
+		dynamicState.pDynamicStates = dynamicStates;
+
+		// Finally the final pipeline layout
+
+		VkPipelineLayoutCreateInfo pipelineInfo = {};
+		pipelineInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineInfo.setLayoutCount = 0;
+		pipelineInfo.pSetLayouts = nullptr;
+		pipelineInfo.pushConstantRangeCount = 0;
+		pipelineInfo.pPushConstantRanges = nullptr;
+
+		if (VK_SUCCESS != vkCreatePipelineLayout(device, &pipelineInfo, nullptr, &pipelineLayout)) {
+			throw std::runtime_error("failed to create pipeline layout!");
+		}
+
 		vkDestroyShaderModule(device, fragShaderModule, nullptr);
 		vkDestroyShaderModule(device, vertShaderModule, nullptr);
 	}
@@ -721,8 +830,6 @@ private:
 		return shaderModule;
 	}
 
-
-
 	// This gets called on every debug message
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -736,6 +843,29 @@ private:
 		}
 		return VK_FALSE;
 	}
+
+	void mainLoop() {
+		while (!glfwWindowShouldClose(window)) {
+			glfwPollEvents();
+		}
+	}
+
+	void cleanup() {
+		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+		for (auto imageView : swapChainImageViews) {
+			vkDestroyImageView(device, imageView, nullptr);
+		}
+		vkDestroySwapchainKHR(device, swapChain, nullptr);
+		vkDestroyDevice(device, nullptr);
+		if (enableValidationLayers) {
+			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+		}
+		vkDestroySurfaceKHR(instance, surface, nullptr);
+		vkDestroyInstance(instance, nullptr);
+		glfwDestroyWindow(window);
+		glfwTerminate();
+	}
+
 
 	// Read the file in as bytes.
 	static std::vector<char> readFile(const std::string& filename) {
