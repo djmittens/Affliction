@@ -7,11 +7,12 @@
 #include <vector>
 #include <optional>
 #include <map>
+#include <set>
 
 /**
   Some serious TODO list for me to tackle at some point on this project.
 
-  * Add Doxygen documentation, to the Vk Layer (maybe even create the layer) 
+  * Add Doxygen documentation, to the Vk Layer (maybe even create the layer)
   * Move the build to CMakeLists
   * Upload to GitHub.
   * Stop using Exceptions darn it ! Use actual response types.
@@ -19,8 +20,8 @@
 
  */
 
-// because this function is an extension function, it is not automatically loaded. 
-// We have to look up its address ourselves using vkGetInstanceProcAddr
+ // because this function is an extension function, it is not automatically loaded. 
+ // We have to look up its address ourselves using vkGetInstanceProcAddr
 VkResult CreateDebugUtilsMessangerEXT(
 	VkInstance instance,
 	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
@@ -67,6 +68,8 @@ private:
 	VkInstance		instance = VK_NULL_HANDLE;
 	VkDevice		device = VK_NULL_HANDLE;
 	VkQueue			graphicsQueue = VK_NULL_HANDLE;
+	VkQueue			presentationQueue = VK_NULL_HANDLE;
+	VkSurfaceKHR	surface = VK_NULL_HANDLE;
 	VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
@@ -91,6 +94,7 @@ private:
 	void initVulkan() {
 		createInstance();
 		setupDebugMessenger();
+		createSurface();
 		pickPhysicalDevice();
 		createLogicalDevice();
 
@@ -150,13 +154,7 @@ private:
 
 		if (VK_SUCCESS != vkCreateInstance(&createInfo, nullptr, &instance)) {
 			throw std::runtime_error("failed to create instance!");
-		}
-
-
-		if (VK_SUCCESS != vkCreateInstance(&createInfo, nullptr, &instance)) {
-			throw std::runtime_error("failed to create instance!");
-		}
-		else {
+		} else {
 			std::cout << "Successfully create a Vulkan instance !!!!" << ENDL;
 		}
 	}
@@ -230,7 +228,23 @@ private:
 
 		return extensions;
 	}
-	
+
+	// Surfaces (eg stuff you draw to render to the screen)
+	void createSurface() {
+		if (VK_SUCCESS != glfwCreateWindowSurface(instance, window, nullptr, &surface)) {
+			throw std::runtime_error("failed to create window surface!~");
+		}
+		/// This is the manual way of doing the same thing but only for windows.
+		//VkWin32SurfaceCreateInfoKHR createInfo = {};
+		//createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+		//createInfo.hwnd = glfwGetWin32Window(window);
+		//createInfo.hinstance = GetModuleHandle(nullptr);
+		//if (VK_SUCCESS != vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface)) {
+		//	throw std::runtime_error("Failed to create the window surface!");
+		//}
+	}
+
+
 	// Physical devices
 
 	void pickPhysicalDevice() {
@@ -292,7 +306,7 @@ private:
 				return 0;
 			}
 		}
-		
+
 		// Very important to have complete queue family set.
 		{
 			QueueFamilyIndicies indices = findQueueFamilies(device);
@@ -307,10 +321,15 @@ private:
 	// Queue family fun
 
 	struct QueueFamilyIndicies {
+		// Device support for draw commands.
 		std::optional<uint32_t> graphicsFamily;
+		// Device support for presentation commands
+		std::optional<uint32_t> presentFamily;
 
 		bool isComplete() {
-			return graphicsFamily.has_value();
+			return
+				graphicsFamily.has_value() &&
+				presentFamily.has_value();
 		}
 	};
 
@@ -324,9 +343,18 @@ private:
 		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
 		int i = 0;
+
+
 		for (const auto& queueFamily : queueFamilies) {
+			VkBool32 presentSupport = false;
+			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+
 			if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
 				indicies.graphicsFamily = i;
+			}
+
+			if (queueFamily.queueCount > 0 && presentSupport) {
+				indicies.presentFamily = i;
 			}
 
 			i++;
@@ -338,14 +366,31 @@ private:
 	// Logical Devices go here, section
 	void createLogicalDevice() {
 		//TODO: this seems unnecessary, figure out why we must query for families multiple times.
-		QueueFamilyIndicies indices = findQueueFamilies(physicalDevice);
-		VkDeviceQueueCreateInfo queueCreateInfo = {};
-		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-		queueCreateInfo.queueCount = 1;
+		//VkDeviceQueueCreateInfo queueCreateInfo = {};
+		//queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		//queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+		//queueCreateInfo.queueCount = 1;
 
-		float queuePriority = 1.0f;
-		queueCreateInfo.pQueuePriorities = &queuePriority;
+		//float queuePriority = 1.0f;
+		//queueCreateInfo.pQueuePriorities = &queuePriority;
+
+		QueueFamilyIndicies indices = findQueueFamilies(physicalDevice);
+		std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+		{
+			//TODO this doesn't seem very safe...
+			// FIXME this function assumes that the graphics family will contain both.
+			std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+
+			const float queuePriority = 1.0f;
+			for (uint32_t queueFamily : uniqueQueueFamilies) {
+				VkDeviceQueueCreateInfo queueCreateInfo = {};
+				queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+				queueCreateInfo.queueFamilyIndex = queueFamily;
+				queueCreateInfo.queueCount = 1;
+				queueCreateInfo.pQueuePriorities = &queuePriority;
+				queueCreateInfos.push_back(queueCreateInfo);
+			}
+		}
 
 		// TODO: come back here for more interesting features later on.
 		VkPhysicalDeviceFeatures deviceFeatures = {};
@@ -353,8 +398,8 @@ private:
 		VkDeviceCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
-		createInfo.pQueueCreateInfos = &queueCreateInfo;
-		createInfo.queueCreateInfoCount = 1;
+		createInfo.queueCreateInfoCount = queueCreateInfos.size();
+		createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
 		createInfo.pEnabledFeatures = &deviceFeatures;
 		/// This is an optional deprecated, backwards compatibility for older SDK's, that differentiate, between
@@ -373,8 +418,9 @@ private:
 
 		// TODO: This seems unsafe because graphics family is an optional value, clearly there has to be a better way
 		vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+		vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentationQueue);
 
-		std::cout << "Created a logical device !" << ENDL;
+		std::cout << "created a logical device !" << ENDL;
 	}
 
 	void mainLoop() {
@@ -388,6 +434,7 @@ private:
 		if (enableValidationLayers) {
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
+		vkDestroySurfaceKHR(instance, surface, nullptr);
 		vkDestroyInstance(instance, nullptr);
 		glfwDestroyWindow(window);
 		glfwTerminate();
