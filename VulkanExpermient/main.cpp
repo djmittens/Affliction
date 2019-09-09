@@ -8,6 +8,17 @@
 #include <optional>
 #include <map>
 
+/**
+  Some serious TODO list for me to tackle at some point on this project.
+
+  * Add Doxygen documentation, to the Vk Layer (maybe even create the layer) 
+  * Move the build to CMakeLists
+  * Upload to GitHub.
+  * Stop using Exceptions darn it ! Use actual response types.
+  * Create a simple module for logging, maybe experiment with macros for that ?
+
+ */
+
 // because this function is an extension function, it is not automatically loaded. 
 // We have to look up its address ourselves using vkGetInstanceProcAddr
 VkResult CreateDebugUtilsMessangerEXT(
@@ -53,8 +64,10 @@ private:
 	GLFWwindow* window = nullptr;
 
 	// Vk stuff specific to the window
-	VkInstance instance;
-	VkDebugUtilsMessengerEXT debugMessenger;
+	VkInstance		instance = VK_NULL_HANDLE;
+	VkDevice		device = VK_NULL_HANDLE;
+	VkQueue			graphicsQueue = VK_NULL_HANDLE;
+	VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
 	const std::vector<const char*> validationLayers = {
@@ -79,6 +92,7 @@ private:
 		createInstance();
 		setupDebugMessenger();
 		pickPhysicalDevice();
+		createLogicalDevice();
 
 		uint32_t extensionCount = 0;
 		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -223,7 +237,7 @@ private:
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 		if (deviceCount < 1) {
-			throw std::runtime_error("Failed to find GPUs with Vulkan support!");
+			throw std::runtime_error("Failed to find GPU's with Vulkan support!");
 		}
 		else {
 			std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -235,7 +249,7 @@ private:
 			auto [rating, device] = *candidates.rbegin();
 
 			if (rating > 0) {
-				std::cout << "Found a physical device i can use! with a score of: " << rating << ENDL;
+				std::cout << "Found a suitable physical device i can use! with a score of: " << rating << ENDL;
 				physicalDevice = device;
 			}
 			else {
@@ -321,6 +335,48 @@ private:
 		return indicies;
 	}
 
+	// Logical Devices go here, section
+	void createLogicalDevice() {
+		//TODO: this seems unnecessary, figure out why we must query for families multiple times.
+		QueueFamilyIndicies indices = findQueueFamilies(physicalDevice);
+		VkDeviceQueueCreateInfo queueCreateInfo = {};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+		queueCreateInfo.queueCount = 1;
+
+		float queuePriority = 1.0f;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+
+		// TODO: come back here for more interesting features later on.
+		VkPhysicalDeviceFeatures deviceFeatures = {};
+
+		VkDeviceCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+		createInfo.pQueueCreateInfos = &queueCreateInfo;
+		createInfo.queueCreateInfoCount = 1;
+
+		createInfo.pEnabledFeatures = &deviceFeatures;
+		/// This is an optional deprecated, backwards compatibility for older SDK's, that differentiate, between
+		/// device and instance based layers
+		if (enableValidationLayers) {
+			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+			createInfo.ppEnabledLayerNames = validationLayers.data();
+		}
+		else {
+			createInfo.enabledLayerCount = 0;
+		}
+
+		if (VK_SUCCESS != vkCreateDevice(physicalDevice, &createInfo, nullptr, &device)) {
+			throw std::runtime_error("failed to create logical device!");
+		}
+
+		// TODO: This seems unsafe because graphics family is an optional value, clearly there has to be a better way
+		vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+
+		std::cout << "Created a logical device !" << ENDL;
+	}
+
 	void mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
 			glfwPollEvents();
@@ -328,6 +384,7 @@ private:
 	}
 
 	void cleanup() {
+		vkDestroyDevice(device, nullptr);
 		if (enableValidationLayers) {
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
