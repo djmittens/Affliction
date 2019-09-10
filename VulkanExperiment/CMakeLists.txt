@@ -17,3 +17,4 @@ add_library(VulkanExperiment src/experiment.cpp)
 
 target_include_directories(VulkanExperiment PUBLIC include/ glfw::glfw glm::glm ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(VulkanExperiment PUBLIC glfw::glfw glm::glm PRIVATE VK_USE_PLATFORM_WIN32_KHR)
+target_compile_features( VulkanExperiment PUBLIC cxx_nullptr cxx_lambdas cxx_inline_namespaces cxx_variadic_templates cxx_nonstatic_member_init)
