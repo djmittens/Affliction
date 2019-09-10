@@ -1,4 +1,6 @@
-﻿#define GLFW_INCLUDE_VULKAN
+﻿#include <VulkanExperiment/experiment.h>
+
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <stdexcept>
@@ -49,9 +51,9 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 	}
 }
 
-class HelloTriangleApplication {
+class HelloTriangleApplication : public IVulkanApplication {
 public:
-	void run() {
+	void run() override {
 		initWindow();
 		initVulkan();
 		mainLoop();
@@ -888,3 +890,7 @@ private:
 		return buffer; 
 	}
 };
+
+std::unique_ptr<IVulkanApplication> newVulkanApplication(const int p_width, const int p_height) {
+	return std::unique_ptr<IVulkanApplication>(new HelloTriangleApplication);
+}

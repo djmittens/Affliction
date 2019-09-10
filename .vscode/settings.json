@@ -1,5 +1,9 @@
 {
     "cSpell.words": [
         "Wwindow"
-    ]
+    ],
+    "cmake.configureOnOpen": true,
+    "files.associations": {
+        "memory": "cpp"
+    }
 }
