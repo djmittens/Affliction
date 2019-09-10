@@ -252,7 +252,7 @@ private:
 		return extensions;
 	}
 
-	// Surfaces (eg stuff you draw to render to the screen)
+	// Surfaces (eg. stuff you draw to render to the screen)
 	void createSurface() {
 		if (VK_SUCCESS != glfwCreateWindowSurface(instance, window, nullptr, &surface)) {
 			throw std::runtime_error("failed to create window surface!~");
@@ -421,9 +421,9 @@ private:
 
 	struct QueueFamilyIndicies {
 		// Device support for draw commands.
-		std::optional<uint32_t> graphicsFamily;
+		std::optional<uint32_t> graphicsFamily = {};
 		// Device support for presentation commands
-		std::optional<uint32_t> presentFamily;
+		std::optional<uint32_t> presentFamily = {};
 
 		bool isComplete() {
 			return
@@ -888,16 +888,3 @@ private:
 		return buffer; 
 	}
 };
-
-int main() {
-	HelloTriangleApplication app;
-	try {
-		app.run();
-	}
-	catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	return EXIT_SUCCESS;
-}
