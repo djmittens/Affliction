@@ -1,13 +1,22 @@
 cmake_minimum_required(VERSION 3.15)
 
+# what the heck man?
+# set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
+
 project(VulkanAffliction)
 
 #Lulz
 if(MSVC)
   add_compile_options(/W4)
 else()
-  add_compile_options(-Wall -Wextra )
+  add_compile_options(-Wall -Wextra)
 endif()
+
+# GCC ? 
+# add_compile_options(-fdiagnostics-color=always)
+
+# CLANG
+# add_compile_options(-fcolor-diagnostics)
 
 # Disable some extraneous stuff
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)

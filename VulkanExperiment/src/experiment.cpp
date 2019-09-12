@@ -31,6 +31,9 @@ const int WIDTH = 800;
 const int HEIGHT = 600;
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
+#define UNUSED(x) (void)x;
+
+
  // because this function is an extension function, it is not automatically loaded. 
  // We have to look up its address ourselves using vkGetInstanceProcAddr
 VkResult CreateDebugUtilsMessangerEXT(
@@ -54,6 +57,10 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 	if (funk != nullptr) {
 		funk(instance, debugMessenger, pAllocator);
 	}
+}
+
+IVulkanApplication::~IVulkanApplication() {
+
 }
 
 class HelloTriangleApplication : public IVulkanApplication {
@@ -83,6 +90,9 @@ private:
 	std::vector<VkCommandBuffer> commandBuffers;
 
 	VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+	std::vector<VkSemaphore> imageAvailableSemaphores;
+	std::vector<VkSemaphore> renderFinishedSemaphores;
+	std::vector<VkFence> inFlightFences;
 	std::vector<VkImage> swapChainImages;
 	std::vector<VkImageView> swapChainImageViews;
 	std::vector<VkFramebuffer> swapChainFramebuffers;
@@ -95,9 +105,6 @@ private:
 
 	VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-
-	VkSemaphore imageAvailableSemaphore;
-	VkSemaphore renderFinishedSempahore;
 
 	const std::vector<const char*> deviceExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -134,7 +141,7 @@ private:
 		createFrameBuffers();
 		createCommandPool();
 		createCommandBuffers();
-		createSemaphores();
+		createSyncObjects();
 
 		{
 			uint32_t extensionCount = 0;
@@ -305,11 +312,11 @@ private:
 			std::multimap<int, VkPhysicalDevice> candidates;
 			rateDevices(devices, candidates);
 
-			auto [rating, device] = *candidates.rbegin();
+			auto [rating, d] = *candidates.rbegin();
 
 			if (rating > 0) {
 				std::cout << "Found a suitable physical device i can use! with a score of: " << rating << ENDL;
-				physicalDevice = device;
+				physicalDevice = d;
 			}
 			else {
 				throw std::runtime_error("failed to find a suitable GPU!");
@@ -323,19 +330,19 @@ private:
 	}
 
 	void rateDevices(std::vector<VkPhysicalDevice> devices, std::multimap<int, VkPhysicalDevice>& output) {
-		for (const auto& device : devices) {
-			int score = getDeviceRating(device);
-			output.insert(std::make_pair(score, device));
+		for (const auto& d : devices) {
+			int score = getDeviceRating(d);
+			output.insert(std::make_pair(score, d));
 		}
 	}
 
-	int getDeviceRating(VkPhysicalDevice device) {
+	int getDeviceRating(VkPhysicalDevice p_device) {
 		int score = 0;
 
 		// Device should be a discrete graphics card, those are usually the most potent.
 		{
 			VkPhysicalDeviceProperties deviceProperties;
-			vkGetPhysicalDeviceProperties(device, &deviceProperties);
+			vkGetPhysicalDeviceProperties(p_device, &deviceProperties);
 			if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
 				score += 1000;
 			}
@@ -344,7 +351,7 @@ private:
 		// The device must support geometry shading, otherwise no point in rendering.
 		{
 			VkPhysicalDeviceFeatures deviceFeatures;
-			vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+			vkGetPhysicalDeviceFeatures(p_device, &deviceFeatures);
 
 			// This is a deal breaker. 😭
 			if (!deviceFeatures.geometryShader) {
@@ -355,7 +362,7 @@ private:
 
 		// Very important to have complete queue family set.
 		{
-			QueueFamilyIndicies indices = findQueueFamilies(device);
+			QueueFamilyIndicies indices = findQueueFamilies(p_device);
 			if (indices.isComplete()) {
 				score += 500;
 			}
@@ -364,10 +371,10 @@ private:
 		// Check required extensions on the device, if there was some that were not found, we will fail.
 		{
 			uint32_t extensionCount;
-			vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+			vkEnumerateDeviceExtensionProperties(p_device, nullptr, &extensionCount, nullptr);
 
 			std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-			vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+			vkEnumerateDeviceExtensionProperties(p_device, nullptr, &extensionCount, availableExtensions.data());
 
 			std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
 
@@ -384,7 +391,7 @@ private:
 		// Querying for swapchain support
 		// A swap chain is sufficient if there is at least one presentation
 		{
-			SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
+			SwapChainSupportDetails swapChainSupport = querySwapChainSupport(p_device);
 			if (swapChainSupport.formats.empty() && swapChainSupport.presentModes.empty()) {
 				return 0;
 			}
@@ -401,31 +408,31 @@ private:
 		std::vector<VkSurfaceFormatKHR> formats;
 		std::vector<VkPresentModeKHR> presentModes;
 	};
-	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) {
+	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice p_device) {
 		SwapChainSupportDetails details;
 
 		// Basic Surface capabilities
 		{
-			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(p_device, surface, &details.capabilities);
 		}
 
 		// Supported surface formats
 		{
 			uint32_t formatCount;
-			vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+			vkGetPhysicalDeviceSurfaceFormatsKHR(p_device, surface, &formatCount, nullptr);
 			if (formatCount != 0) {
 				details.formats.resize(formatCount);
-				vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+				vkGetPhysicalDeviceSurfaceFormatsKHR(p_device, surface, &formatCount, details.formats.data());
 			}
 		}
 
 		//Querying supported presentation modes
 		{
 			uint32_t modeCount;
-			vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &modeCount, nullptr);
+			vkGetPhysicalDeviceSurfacePresentModesKHR(p_device, surface, &modeCount, nullptr);
 			if (modeCount != 0) {
 				details.presentModes.resize(modeCount);
-				vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &modeCount, details.presentModes.data());
+				vkGetPhysicalDeviceSurfacePresentModesKHR(p_device, surface, &modeCount, details.presentModes.data());
 			}
 		}
 
@@ -454,21 +461,21 @@ private:
 	/// This will find different types of queue families supported by the device.
 	/// Queue families can be used to schedule command buffers, for the hardware drive to perform the 
 	/// sort of real operations that usually perform.
-	QueueFamilyIndicies findQueueFamilies(VkPhysicalDevice device) {
+	QueueFamilyIndicies findQueueFamilies(VkPhysicalDevice p_device) {
 		QueueFamilyIndicies indicies = {};
 
 		uint32_t queueFamilyCount = 0;
-		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+		vkGetPhysicalDeviceQueueFamilyProperties(p_device, &queueFamilyCount, nullptr);
 
 		std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+		vkGetPhysicalDeviceQueueFamilyProperties(p_device, &queueFamilyCount, queueFamilies.data());
 
 		int i = 0;
 
 
 		for (const auto& queueFamily : queueFamilies) {
 			VkBool32 presentSupport = false;
-			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+			vkGetPhysicalDeviceSurfaceSupportKHR(p_device, i, surface, &presentSupport);
 
 			if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
 				indicies.graphicsFamily = i;
@@ -650,6 +657,7 @@ private:
 			VkExtent2D actualExtent = { WIDTH, HEIGHT };
 			actualExtent.width = std::max(capabilities.minImageExtent.width,
 				std::min(capabilities.maxImageExtent.width, actualExtent.width));
+			return actualExtent;
 		}
 	}
 
@@ -999,7 +1007,7 @@ private:
 			renderPassInfo.renderArea.offset = { 0, 0 };
 			renderPassInfo.renderArea.extent = swapChainExtent;
 
-			VkClearValue clearColor = { 0.5f, 0.5f, 0.5f, 1.0f };
+			VkClearValue clearColor = {{{ 0.5f, 0.5f, 0.5f, 1.0f }}};
 			renderPassInfo.clearValueCount = 1;
 			renderPassInfo.pClearValues = &clearColor;
 
@@ -1011,22 +1019,34 @@ private:
 
 			vkCmdEndRenderPass(commandBuffers[i]);
 
-			if (VK_SUCCESS != vkEndCommandBuffer(commandBuffers[i])) {
-				throw std::runtime_error("failed to record command buffer!");
-			}
-		}
+                        if (VK_SUCCESS !=
+                            vkEndCommandBuffer(commandBuffers[i])) {
+                          throw std::runtime_error(
+                              "failed to record command buffer!");
+                        }
+                }
 	}
 
-	void createSemaphores() {
+	void createSyncObjects() {
+		imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+		renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+		inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+
+
 		VkSemaphoreCreateInfo semaphoreInfo = {};
 		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-		if (VK_SUCCESS != vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphore)) {
-			throw std::runtime_error("failed to create image available semaphore");
-		}
+		VkFenceCreateInfo fenceInfo = {};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-		if (VK_SUCCESS != vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSempahore)) {
-			throw std::runtime_error("failed to create render finished semaphore");
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+			if (VK_SUCCESS != vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i])
+				|| VK_SUCCESS != vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i])
+				|| VK_SUCCESS != vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i])
+				) {
+				throw std::runtime_error("failed to create image available semaphore");
+			}
 		}
 	}
 
@@ -1050,6 +1070,8 @@ private:
 		VkDebugUtilsMessageTypeFlagsEXT messageType,
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 		void* pUserData) {
+			UNUSED(messageType);
+			UNUSED(pUserData);
 		std::cout << "validation layer::" << pCallbackData->pMessage << ENDL;
 
 		if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
@@ -1067,13 +1089,17 @@ private:
 	}
 
 	void drawFrame() {
-		uint32_t imageIndex;
-		vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+		uint32_t imageIndex = 0;
+		size_t currentFrame = 0;
+		vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+		vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+		vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
 		VkSubmitInfo submitInfo = {};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-		VkSemaphore waitSemaphores[] = { imageAvailableSemaphore };
+		VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = waitSemaphores;
@@ -1082,7 +1108,7 @@ private:
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
 
-		VkSemaphore signalSemaphores[] = { renderFinishedSempahore };
+		VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame]};
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
@@ -1099,17 +1125,22 @@ private:
 
 		presentInfo.pResults = nullptr;
 
-		if (VK_SUCCESS != vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)) {
+		if (VK_SUCCESS != vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame])) {
 			throw std::runtime_error("failed to submit draw command buffer!");
 		}
 
 		vkQueuePresentKHR(presentationQueue, &presentInfo);
 		vkQueueWaitIdle(presentationQueue);
+
+		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
 	void cleanup() {
-		vkDestroySemaphore(device, renderFinishedSempahore, nullptr);
-		vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+			vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
+			vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
+			vkDestroyFence(device, inFlightFences[i], nullptr);
+		}
 		vkDestroyCommandPool(device, commandPool, nullptr);
 		for (auto framebuffer : swapChainFramebuffers) {
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
@@ -1155,5 +1186,7 @@ private:
 };
 
 std::unique_ptr<IVulkanApplication> newVulkanApplication(const int p_width, const int p_height) {
+	UNUSED(p_width);
+	UNUSED(p_height);
 	return std::unique_ptr<IVulkanApplication>(new HelloTriangleApplication);
 }
