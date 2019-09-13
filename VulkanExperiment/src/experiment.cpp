@@ -106,6 +106,8 @@ private:
 	VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
+	size_t currentFrame = 0;
+
 	const std::vector<const char*> deviceExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
@@ -1042,7 +1044,7 @@ private:
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			if (VK_SUCCESS != vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i])
-				|| VK_SUCCESS != vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i])
+				|| VK_SUCCESS != vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i])
 				|| VK_SUCCESS != vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i])
 				) {
 				throw std::runtime_error("failed to create image available semaphore");
@@ -1084,17 +1086,18 @@ private:
 		while (!glfwWindowShouldClose(window)) {
 			glfwPollEvents();
 			drawFrame();
+			//vkQueueWaitIdle(presentationQueue);
 		}
 		vkDeviceWaitIdle(device);
 	}
 
 	void drawFrame() {
-		uint32_t imageIndex = 0;
-		size_t currentFrame = 0;
-		vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
-
 		vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 		vkResetFences(device, 1, &inFlightFences[currentFrame]);
+
+		uint32_t imageIndex = 0;
+		vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
 
 		VkSubmitInfo submitInfo = {};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1129,10 +1132,10 @@ private:
 			throw std::runtime_error("failed to submit draw command buffer!");
 		}
 
-		vkQueuePresentKHR(presentationQueue, &presentInfo);
-		vkQueueWaitIdle(presentationQueue);
 
 		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+		vkQueuePresentKHR(presentationQueue, &presentInfo);
+		vkQueueWaitIdle(presentationQueue);
 	}
 
 	void cleanup() {
