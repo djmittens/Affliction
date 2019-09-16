@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 # what the heck man?
 # set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
+option(BUILD_DOC "Bould documentation" ON)
 
 project(VulkanAffliction)
 
@@ -57,6 +58,27 @@ else()
   )
 endif()
 
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+  #  our initial output configuration
+  set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/../docs/Doxyfile.in)
+  set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+  # Loading up the configuration file
+  configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+  message("Doxygen build started")
+
+  add_custom_target(doc_doxygen ALL
+    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Generating API documentation with Doxygen"
+    VERBATIM
+  )
+
+else(DOXYGEN_FOUND)
+  message("[Doxygen](http://www.doxygen.nl/) needs to be installed to generate documentation.")
+endif(DOXYGEN_FOUND)
+
 # GCC ? 
 # add_compile_options(-fdiagnostics-color=always)
 
@@ -78,6 +100,3 @@ add_subdirectory(extern/glm)
 add_library(glm::glm ALIAS glm_static)
 add_subdirectory(VulkanExperiment)
 add_subdirectory(Werld)
-
-add_executable(hello helloworld.cpp)
-target_compile_features(hello PRIVATE cxx_std_17)

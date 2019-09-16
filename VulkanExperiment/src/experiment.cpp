@@ -1,4 +1,5 @@
 ﻿#include <VulkanExperiment/experiment.hpp>
+#include <VulkanExperiment/logging.hpp>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -61,9 +62,9 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
 }
 
 namespace vke::platform {
-IVulkanApplication::~IVulkanApplication() {}
+IApplication::~IApplication() {}
 
-class HelloTriangleApplication : public IVulkanApplication {
+class HelloTriangleApplication : public IApplication {
 public:
   void run() override {
     initWindow();
@@ -73,9 +74,6 @@ public:
   }
 
 private:
-  static const char TAB = '\t';
-  static const char ENDL = '\n';
-
   // Window junk i dunno
   GLFWwindow *window = nullptr;
 
@@ -151,10 +149,11 @@ private:
       vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount,
                                              extensions.data());
 
-      std::cout << "available extensions:" << ENDL;
+      std::cout << "available extensions:" << vke::platform::ENDL;
 
       for (const auto &extension : extensions) {
-        std::cout << TAB << extension.extensionName << ENDL;
+        std::cout << vke::platform::TAB << extension.extensionName
+                  << vke::platform::ENDL;
       }
     }
   }
@@ -1252,10 +1251,10 @@ private:
   }
 };
 
-std::unique_ptr<IVulkanApplication> newVulkanApplication(const int p_width,
-                                                         const int p_height) {
+std::unique_ptr<IApplication> createApplication(const int p_width,
+                                                const int p_height) {
   UNUSED(p_width);
   UNUSED(p_height);
-  return std::unique_ptr<IVulkanApplication>(new HelloTriangleApplication);
+  return std::unique_ptr<IApplication>(new HelloTriangleApplication);
 }
 } // namespace vke::platform
