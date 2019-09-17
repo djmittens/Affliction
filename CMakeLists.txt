@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 # what the heck man?
 # set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
-option(BUILD_DOC "Bould documentation" ON)
+option(BUILD_DOC "Build documentation" ON)
 
 project(VulkanAffliction)
 
@@ -58,26 +58,23 @@ else()
   )
 endif()
 
-find_package(Doxygen)
-if(DOXYGEN_FOUND)
-  #  our initial output configuration
-  set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/../docs/Doxyfile.in)
-  set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+if (BUILD_DOC)
+  find_package(Doxygen)
+  if (NOT DOXYGEN_FOUND)
+    message("[Doxygen](http://www.doxygen.nl/) needs to be installed to generate documentation.")
+  else()
+    set(DOC_DEST_DIR ${CMAKE_BINARY_DIR} CACHE PATH "Path to the doxygen output")
+    set(DOC_INPUT_ROOT_DIRS ${CMAKE_HOME_DIRECTORY} CACHE PATH "Path from where to start to parse")
+    set(DOC_EXCLUDE_PATTERNS_DIRS ${CMAKE_BINARY_DIR} CACHE STRING "Regex patterns exclusion")
+    set(DOC_COMMON_IMG_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Path where doxygen will find referenced images" )
 
-  # Loading up the configuration file
-  configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-  message("Doxygen build started")
-
-  add_custom_target(doc_doxygen ALL
-    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Generating API documentation with Doxygen"
-    VERBATIM
-  )
-
-else(DOXYGEN_FOUND)
-  message("[Doxygen](http://www.doxygen.nl/) needs to be installed to generate documentation.")
-endif(DOXYGEN_FOUND)
+    configure_file("docs/Doxyfile.in" ${CMAKE_BINARY_DIR}/Doxyfile @ONLY)
+    add_custom_target(doxyDoc COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/"Doxyfile"
+      WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}
+      COMMENT "Building user's documentation into doxyDoc build dir..."
+    )
+  endif()
+endif()
 
 # GCC ? 
 # add_compile_options(-fdiagnostics-color=always)
