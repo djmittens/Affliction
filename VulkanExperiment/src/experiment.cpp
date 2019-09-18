@@ -363,10 +363,11 @@ private:
       vkGetPhysicalDeviceFeatures(p_device, &deviceFeatures);
 
       // This is a deal breaker. 😭
-      if (!deviceFeatures.geometryShader) {
-        std::cout << "geometryShader feature was not found on a device" << ENDL;
-        return 0;
-      }
+      // Also do we actually use geometry shaders?
+      // if (!deviceFeatures.geometryShader) {
+      //   std::cout << "geometryShader feature was not found on a device" << ENDL;
+      //   return 0;
+      // }
     }
 
     // Very important to have complete queue family set.
