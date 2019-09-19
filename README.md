@@ -1,4 +1,4 @@
-# VulkanExperiment
+# Affliction
 
 For this project i will be following Vulkan api tutorial i found online, to hopefully get a jump start in graphics.
 

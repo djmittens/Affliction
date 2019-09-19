@@ -1,10 +1,16 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+
 
 # what the heck man?
 # set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 option(BUILD_DOC "Build documentation" ON)
 
-project(VulkanAffliction)
+project(Affliction)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 #Lulz
 if(MSVC)
@@ -58,23 +64,31 @@ else()
   )
 endif()
 
-if (BUILD_DOC)
-  find_package(Doxygen)
-  if (NOT DOXYGEN_FOUND)
-    message("[Doxygen](http://www.doxygen.nl/) needs to be installed to generate documentation.")
-  else()
-    set(DOC_DEST_DIR ${CMAKE_BINARY_DIR} CACHE PATH "Path to the doxygen output")
-    set(DOC_INPUT_ROOT_DIRS ${CMAKE_HOME_DIRECTORY} CACHE PATH "Path from where to start to parse")
-    set(DOC_EXCLUDE_PATTERNS_DIRS ${CMAKE_BINARY_DIR} CACHE STRING "Regex patterns exclusion")
-    set(DOC_COMMON_IMG_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Path where doxygen will find referenced images" )
 
-    configure_file("docs/Doxyfile.in" ${CMAKE_BINARY_DIR}/Doxyfile @ONLY)
-    add_custom_target(doxyDoc COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/"Doxyfile"
-      WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}
-      COMMENT "Building user's documentation into doxyDoc build dir..."
-    )
-  endif()
-endif()
+include(GNUInstallDirs)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+# if (BUILD_DOC)
+#   find_package(Doxygen)
+#   if (NOT DOXYGEN_FOUND)
+#     message("[Doxygen](http://www.doxygen.nl/) needs to be installed to generate documentation.")
+#   else()
+#     set(DOC_DEST_DIR ${CMAKE_BINARY_DIR} CACHE PATH "Path to the doxygen output")
+#     set(DOC_INPUT_ROOT_DIRS ${CMAKE_HOME_DIRECTORY} CACHE PATH "Path from where to start to parse")
+#     set(DOC_EXCLUDE_PATTERNS_DIRS ${CMAKE_BINARY_DIR} CACHE STRING "Regex patterns exclusion")
+#     set(DOC_COMMON_IMG_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Path where doxygen will find referenced images" )
+
+#     configure_file("docs/Doxyfile.in" ${CMAKE_BINARY_DIR}/Doxyfile @ONLY)
+#     add_custom_target(doxyDoc COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/"Doxyfile"
+#       WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}
+#       COMMENT "Building user's documentation into doxyDoc build dir..."
+#     )
+#   endif()
+# endif()
 
 # GCC ? 
 # add_compile_options(-fdiagnostics-color=always)
@@ -97,3 +111,31 @@ add_subdirectory(extern/glm)
 add_library(glm::glm ALIAS glm_static)
 add_subdirectory(VulkanExperiment)
 add_subdirectory(Werld)
+
+
+set(DOC_DEST_DIR ${CMAKE_BINARY_DIR} CACHE PATH "Path to the doxygen output")
+set(DOC_INPUT_ROOT_DIRS_LIST 
+  ${CMAKE_SOURCE_DIR}/docs/front_page.md
+  ${CMAKE_SOURCE_DIR}/VulkanExperiment/src 
+  ${CMAKE_SOURCE_DIR}/VulkanExperiment/include 
+  ${CMAKE_SOURCE_DIR}/Werld/src 
+  ${CMAKE_SOURCE_DIR}/Werld/include 
+  CACHE PATH "Path from where to start to parse"
+)
+list(JOIN DOC_INPUT_ROOT_DIRS_LIST " " DOC_INPUT_ROOT_DIRS)
+
+set(DOC_EXCLUDE_PATTERNS_DIRS ${CMAKE_BINARY_DIR} CACHE STRING "Regex patterns exclusion")
+set(DOC_COMMON_IMG_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Path where doxygen will find referenced images" )
+
+
+include(UseDoxygenDoc)
+add_doxygen_doc(
+  DOXY_FILE
+    ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in
+  BUILD_DIR
+    ${CMAKE_CURRENT_BINARY_DIR}
+  TARGET_NAME
+    docs
+  COMMENT
+    "HTML documentation"
+)
