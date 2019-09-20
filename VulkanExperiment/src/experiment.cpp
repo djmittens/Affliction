@@ -425,6 +425,7 @@ private:
   };
 
   SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice p_device) {
+
     SwapChainSupportDetails details;
 
     // Basic Surface capabilities
@@ -544,7 +545,7 @@ private:
 
     // TODO: we will need to figure out how to shave off some precision here to
     // avoid overflows.
-    createInfo.queueCreateInfoCount = queueCreateInfos.size();
+    createInfo.queueCreateInfoCount = (uint32_t)queueCreateInfos.size();
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
     createInfo.pEnabledFeatures = &deviceFeatures;
