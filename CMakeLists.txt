@@ -11,6 +11,23 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(WIN32)
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
+# Disable some extraneous stuff
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
+
+find_package(Vulkan REQUIRED)
+
+add_subdirectory(extern/glfw)
+add_library(glfw::glfw ALIAS glfw)
+add_subdirectory(extern/glm)
+# GOOFY AF, hack to make cross module dependencies work
+add_library(glm::glm ALIAS glm_static)
 
 #Lulz
 if(MSVC)
@@ -96,19 +113,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 # CLANG
 # add_compile_options(-fcolor-diagnostics)
 
-# Disable some extraneous stuff
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
-
-find_package(Vulkan REQUIRED)
-
-add_subdirectory(extern/glfw)
-add_library(glfw::glfw ALIAS glfw)
-add_subdirectory(extern/glm)
-# GOOFY AF, hack to make cross module dependencies work
-add_library(glm::glm ALIAS glm_static)
 add_subdirectory(VulkanExperiment)
 add_subdirectory(Werld)
 

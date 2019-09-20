@@ -365,8 +365,8 @@ private:
       // This is a deal breaker. 😭
       // Also do we actually use geometry shaders?
       // if (!deviceFeatures.geometryShader) {
-      //   std::cout << "geometryShader feature was not found on a device" << ENDL;
-      //   return 0;
+      //   std::cout << "geometryShader feature was not found on a device" <<
+      //   ENDL; return 0;
       // }
     }
 
