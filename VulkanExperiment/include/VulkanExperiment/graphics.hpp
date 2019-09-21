@@ -2,7 +2,7 @@
 
 #include "logging.hpp"
 
-namespace vke::platform {
+namespace vke::platform::graphics {
 /**
  * @brief This is a pretty awesome interface to allow you to interact with the
  * graphics hardware.  Pretty rudamentary stuff.
@@ -29,4 +29,4 @@ struct SCreateWindow {
   };
 };
 
-} // namespace vke::platform
+} // namespace vke::platform::graphics

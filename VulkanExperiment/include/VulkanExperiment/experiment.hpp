@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logging.hpp"
 #include <memory>
 
 namespace vke::platform {
@@ -22,7 +23,6 @@ public:
  * @param p_height
  * @return std::unique_ptr<IApplication>
  */
-std::unique_ptr<IApplication> createApplication(const int p_width,
-                                                const int p_height);
+std::unique_ptr<IApplication> createApplication();
 
 } // namespace vke::platform
