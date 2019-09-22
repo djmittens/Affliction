@@ -17,7 +17,7 @@ public:
   virtual void initializeSurface() = 0;
 };
 
-IWindowGraphics createWindow();
+IWindowGraphics createWindow(const SCreateWindow settings);
 
 struct SCreateWindow {
   int height = 0;
@@ -25,6 +25,11 @@ struct SCreateWindow {
 
   SCreateWindow &withHeight(int p_height) {
     height = p_height;
+    return *this;
+  };
+
+  SCreateWindow &withWidth(int p_width) {
+    width = p_width;
     return *this;
   };
 };

@@ -3,7 +3,7 @@
 
 int main() {
   // HelloTriangleApplication app;
-  auto app = vke::platform::createApplication(800, 600);
+  auto app = vke::platform::createApplication();
   try {
     app->run();
   } catch (const std::exception &e) {

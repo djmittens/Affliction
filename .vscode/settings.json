@@ -2,7 +2,8 @@
     "cmake.configureOnOpen": true,
     "files.associations": {
         "memory": "cpp",
-        "stdexcept": "cpp"
+        "stdexcept": "cpp",
+        "vector": "cpp"
     },
     "cSpell.enabled": false,
     "editor.formatOnSave": true

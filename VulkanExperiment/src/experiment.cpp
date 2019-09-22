@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <array>
+#include <boost/bind.hpp>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
@@ -66,6 +67,9 @@ IApplication::~IApplication() {}
 
 class HelloTriangleApplication : public IApplication {
 public:
+  HelloTriangleApplication(
+      std::shared_ptr<vke::platform::logging::ILogger> p_logger)
+      : m_logger(p_logger) {}
   void run() override {
     initWindow();
     initVulkan();
@@ -74,6 +78,8 @@ public:
   }
 
 private:
+  std::shared_ptr<vke::platform::logging::ILogger> m_logger = nullptr;
+  // Useful junk for logging to somewhere
   // Window junk i dunno
   GLFWwindow *window = nullptr;
 
@@ -149,11 +155,13 @@ private:
       vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount,
                                              extensions.data());
 
-      std::cout << "available extensions:" << vke::platform::ENDL;
+      // std::cout << "available extensions:" << vke::platform::ENDL;
+      m_logger->info("available extensions:");
 
       for (const auto &extension : extensions) {
-        std::cout << vke::platform::TAB << extension.extensionName
-                  << vke::platform::ENDL;
+        m_logger->info("\t" + std::string(extension.extensionName));
+        // std::cout << vke::platform::TAB <<
+        //           << vke::platform::ENDL;
       }
     }
   }
@@ -202,7 +210,8 @@ private:
     if (VK_SUCCESS != vkCreateInstance(&createInfo, nullptr, &instance)) {
       throw std::runtime_error("failed to create a vulkan instance!");
     } else {
-      std::cout << "Successfully created a Vulkan instance !!!!" << ENDL;
+      // std::cout << "Successfully created a Vulkan instance !!!!" << ENDL;
+      m_logger->info("Successfully created a Vulkan instance !!!!");
     }
   }
 
@@ -211,7 +220,8 @@ private:
     if (!enableValidationLayers)
       return;
 
-    std::cout << "setting up the debug messenger." << ENDL;
+    // std::cout << "setting up the debug messenger." << ENDL;
+    m_logger->info("setting up the debug messenger.");
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
     populateDebugMessengerCreateInfo(createInfo);
@@ -239,6 +249,7 @@ private:
                              VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 
     createInfo.pfnUserCallback = debugCallback;
+    // boost::bind(debugCallback, m_logger, _1, _2, _3, _4);
     createInfo.pUserData = nullptr;
   }
 
@@ -320,9 +331,15 @@ private:
       auto [rating, d] = *candidates.rbegin();
 
       if (rating > 0) {
-        std::cout
-            << "Found a suitable physical device i can use! with a score of: "
-            << rating << ENDL;
+        // std::cout
+        //     << "Found a suitable physical device i can use! with a score of:
+        //     "
+        //     << rating << ENDL;
+
+        m_logger->info(std::string(
+            "Found a suitable physical device i can use! with a score of: " +
+            rating));
+
         physicalDevice = d;
       } else {
         throw std::runtime_error("failed to find a suitable GPU!");
@@ -397,7 +414,9 @@ private:
       }
 
       if (!requiredExtensions.empty()) {
-        std::cout << "required extensions were not found on a device" << ENDL;
+        // std::cout << "required extensions were not found on a device" <<
+        // ENDL;
+        m_logger->error("required extensions were not found on a device");
         return 0;
       }
     }
@@ -575,7 +594,8 @@ private:
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0,
                      &presentationQueue);
 
-    std::cout << "created a logical device !" << ENDL;
+    // std::cout << "created a logical device !" << ENDL;
+    m_logger->info("created a logical device !");
   }
 
   void createSwapChain() {
@@ -613,14 +633,18 @@ private:
                                         indices.presentFamily.value()};
 
       if (indices.graphicsFamily != indices.presentFamily) {
-        std::cout << "creating the slow VK_SHARING_MODE_CONCURRENT mode "
-                  << ENDL;
+        // std::cout << "creating the slow VK_SHARING_MODE_CONCURRENT mode "
+        //           << ENDL;
+        m_logger->info(
+            std::string("creating the slow VK_SHARING_MODE_CONCURRENT mode"));
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         createInfo.queueFamilyIndexCount = 2;
         createInfo.pQueueFamilyIndices = queueFamilyIndicies;
       } else {
-        std::cout << "creating the fast VK_SHARING_MODE_EXCLUSIVE mode "
-                  << ENDL;
+        // std::cout << "creating the fast VK_SHARING_MODE_EXCLUSIVE mode "
+        //           << ENDL;
+        m_logger->info("creating the fast VK_SHARING_MODE_EXCLUSIVE mode ");
+
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         createInfo.queueFamilyIndexCount = 0;
         createInfo.pQueueFamilyIndices = nullptr;
@@ -1137,7 +1161,9 @@ private:
                 void *pUserData) {
     UNUSED(messageType);
     UNUSED(pUserData);
-    std::cout << "validation layer::" << pCallbackData->pMessage << ENDL;
+    // std::cout << "validation layer::" << pCallbackData->pMessage << ENDL;
+    // m_logger->info("validation layer::" +
+    // std::string(pCallbackData->pMessage));
 
     if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
       // An important message that we would show.
@@ -1253,10 +1279,8 @@ private:
   }
 };
 
-std::unique_ptr<IApplication> createApplication(const int p_width,
-                                                const int p_height) {
-  UNUSED(p_width);
-  UNUSED(p_height);
-  return std::unique_ptr<IApplication>(new HelloTriangleApplication);
+std::unique_ptr<IApplication> createApplication() {
+  return std::unique_ptr<IApplication>(new HelloTriangleApplication{
+      std::shared_ptr<vke::platform::logging::NoOpLogger>{}});
 }
 } // namespace vke::platform

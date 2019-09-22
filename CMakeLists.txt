@@ -29,6 +29,13 @@ add_subdirectory(extern/glm)
 # GOOFY AF, hack to make cross module dependencies work
 add_library(glm::glm ALIAS glm_static)
 
+
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME ON)
+
+find_package(Boost 1.71.0 REQUIRED COMPONENTS filesystem)
+
 #Lulz
 if(MSVC)
   add_compile_options(
@@ -123,7 +130,7 @@ set(DOC_INPUT_ROOT_DIRS_LIST
   ${CMAKE_SOURCE_DIR}/VulkanExperiment/src 
   ${CMAKE_SOURCE_DIR}/VulkanExperiment/include 
   ${CMAKE_SOURCE_DIR}/Werld/src 
-  ${CMAKE_SOURCE_DIR}/Werld/include 
+  # ${CMAKE_SOURCE_DIR}/Werld/include 
   CACHE PATH "Path from where to start to parse"
 )
 list(JOIN DOC_INPUT_ROOT_DIRS_LIST " " DOC_INPUT_ROOT_DIRS)

@@ -4,6 +4,7 @@
 #include <memory>
 
 namespace vke::platform {
+
 /**
  * @brief This is main configuration for a running application, that will allow
  * you to configure different aspects of stuff.
