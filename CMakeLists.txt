@@ -29,12 +29,18 @@ add_subdirectory(extern/glm)
 # GOOFY AF, hack to make cross module dependencies work
 add_library(glm::glm ALIAS glm_static)
 
-
+# Phew get to disable this after a bout of debugging.
+# set(Boost_DEBUG ON)
+# set(BOOST_ROOT "C:/lib/boost_1_71_0")
+# set(BOOST_INCLUDEDIR "C:/lib/boost_1_71_0")
+# set(BOOST_LIBRARYDIR "C:/lib/boost_1_71_0/stage/lib")
+# set(Boost_ADDITIONAL_VERSIONS "1.71.0")
+set(Boost_DETAILED_FAILURE_MSG ON)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
 
-find_package(Boost 1.71.0 REQUIRED COMPONENTS filesystem)
+find_package(Boost REQUIRED COMPONENTS filesystem)
 
 #Lulz
 if(MSVC)

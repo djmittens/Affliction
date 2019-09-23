@@ -19,6 +19,10 @@ Make sure to manually install these on your system for optimal experience
 * Vulkan API v1.144
 * Doxygen
 
+### Boost
+
+TODO: There are special instructions for building boost libraries, for them to work, and there is a special way to be able to debug the cmake module for boost as well.  Look at the  [stackoverflow question for details](https://stackoverflow.com/questions/57870032/cmake-v3-15-3-cannot-find-boost-v1-71-0)
+
 ## Building
 
 In order to build this, please use `llvm-clang` and `ninja` do the following

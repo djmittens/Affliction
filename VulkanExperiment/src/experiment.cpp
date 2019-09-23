@@ -5,7 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <array>
-#include <boost/bind.hpp>
+// #include <boost/bind.hpp>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
@@ -78,7 +78,7 @@ public:
   }
 
 private:
-  std::shared_ptr<vke::platform::logging::ILogger> m_logger = nullptr;
+  std::shared_ptr<vke::platform::logging::ILogger> m_logger;
   // Useful junk for logging to somewhere
   // Window junk i dunno
   GLFWwindow *window = nullptr;
@@ -1280,7 +1280,8 @@ private:
 };
 
 std::unique_ptr<IApplication> createApplication() {
-  return std::unique_ptr<IApplication>(new HelloTriangleApplication{
-      std::shared_ptr<vke::platform::logging::NoOpLogger>{}});
+  auto logger = std::shared_ptr<vke::platform::logging::NoOpLogger>(
+      new vke::platform::logging::NoOpLogger());
+  return std::unique_ptr<IApplication>(new HelloTriangleApplication(logger));
 }
 } // namespace vke::platform
