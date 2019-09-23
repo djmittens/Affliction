@@ -1,9 +1,33 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+
 
 # what the heck man?
 # set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
+option(BUILD_DOC "Build documentation" ON)
 
-project(VulkanAffliction)
+project(Affliction)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(WIN32)
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
+# Disable some extraneous stuff
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
+
+find_package(Vulkan REQUIRED)
+
+add_subdirectory(extern/glfw)
+add_library(glfw::glfw ALIAS glfw)
+add_subdirectory(extern/glm)
+# GOOFY AF, hack to make cross module dependencies work
+add_library(glm::glm ALIAS glm_static)
 
 #Lulz
 if(MSVC)
@@ -49,13 +73,39 @@ else()
     # -Wduplicated-cond (only in GCC >= 6.0) # warn if if / else chain has duplicated conditions
     # -Wduplicated-branches (only in GCC >= 7.0) # warn if if / else branches have duplicated code
     # -Wlogical-op  # (only in GCC)warn about logical operations being used where bitwise were probably wanted
-    -Wnull-dereference  # (only in GCC >= 6.0) warn if a null dereference is detected
-    -Wuseless-cast  # (only in GCC >= 4.8)warn if you perform a cast to the same type
+    # -Wnull-dereference  # (only in GCC >= 6.0) warn if a null dereference is detected
+    # -Wuseless-cast  # (only in GCC >= 4.8)warn if you perform a cast to the same type
     -Wdouble-promotion #(GCC >= 4.6, Clang >= 3.8)  warn if float is implicit promoted to double
     -Wformat=2 # warn on security issues around functions that format output (ie printf)
-    -Wlifetime # (only special branch of Clang currently) shows object lifetime issues
+    # -Wlifetime # (only special branch of Clang currently) shows object lifetime issues
   )
 endif()
+
+
+include(GNUInstallDirs)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+# if (BUILD_DOC)
+#   find_package(Doxygen)
+#   if (NOT DOXYGEN_FOUND)
+#     message("[Doxygen](http://www.doxygen.nl/) needs to be installed to generate documentation.")
+#   else()
+#     set(DOC_DEST_DIR ${CMAKE_BINARY_DIR} CACHE PATH "Path to the doxygen output")
+#     set(DOC_INPUT_ROOT_DIRS ${CMAKE_HOME_DIRECTORY} CACHE PATH "Path from where to start to parse")
+#     set(DOC_EXCLUDE_PATTERNS_DIRS ${CMAKE_BINARY_DIR} CACHE STRING "Regex patterns exclusion")
+#     set(DOC_COMMON_IMG_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Path where doxygen will find referenced images" )
+
+#     configure_file("docs/Doxyfile.in" ${CMAKE_BINARY_DIR}/Doxyfile @ONLY)
+#     add_custom_target(doxyDoc COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/"Doxyfile"
+#       WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}
+#       COMMENT "Building user's documentation into doxyDoc build dir..."
+#     )
+#   endif()
+# endif()
 
 # GCC ? 
 # add_compile_options(-fdiagnostics-color=always)
@@ -63,21 +113,33 @@ endif()
 # CLANG
 # add_compile_options(-fcolor-diagnostics)
 
-# Disable some extraneous stuff
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
-
-find_package(Vulkan REQUIRED)
-
-add_subdirectory(extern/glfw)
-add_library(glfw::glfw ALIAS glfw)
-add_subdirectory(extern/glm)
-# GOOFY AF, hack to make cross module dependencies work
-add_library(glm::glm ALIAS glm_static)
 add_subdirectory(VulkanExperiment)
 add_subdirectory(Werld)
 
-add_executable(hello helloworld.cpp)
-target_compile_features(hello PRIVATE cxx_std_17)
+
+set(DOC_DEST_DIR ${CMAKE_BINARY_DIR} CACHE PATH "Path to the doxygen output")
+set(DOC_INPUT_ROOT_DIRS_LIST 
+  ${CMAKE_SOURCE_DIR}/docs/front_page.md
+  ${CMAKE_SOURCE_DIR}/VulkanExperiment/src 
+  ${CMAKE_SOURCE_DIR}/VulkanExperiment/include 
+  ${CMAKE_SOURCE_DIR}/Werld/src 
+  ${CMAKE_SOURCE_DIR}/Werld/include 
+  CACHE PATH "Path from where to start to parse"
+)
+list(JOIN DOC_INPUT_ROOT_DIRS_LIST " " DOC_INPUT_ROOT_DIRS)
+
+set(DOC_EXCLUDE_PATTERNS_DIRS ${CMAKE_BINARY_DIR} CACHE STRING "Regex patterns exclusion")
+set(DOC_COMMON_IMG_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Path where doxygen will find referenced images" )
+
+
+include(UseDoxygenDoc)
+add_doxygen_doc(
+  DOXY_FILE
+    ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in
+  BUILD_DIR
+    ${CMAKE_CURRENT_BINARY_DIR}
+  TARGET_NAME
+    docs
+  COMMENT
+    "HTML documentation"
+)

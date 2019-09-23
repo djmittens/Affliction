@@ -5,10 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(lldb | POSIX) Launch Werld",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Werld/werld",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/VulkanExperiment",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        },
+        {
             "name": "(Windows) Launch Werld",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/Werld/werld.exe",
+            "program": "${workspaceFolder}/build/bin/Debug/werld.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/VulkanExperiment/",

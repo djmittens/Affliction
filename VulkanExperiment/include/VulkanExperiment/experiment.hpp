@@ -3,15 +3,26 @@
 #include <memory>
 
 namespace vke::platform {
-class IVulkanApplication {
+/**
+ * @brief This is main configuration for a running application, that will allow
+ * you to configure different aspects of stuff.
+ */
+class IApplication {
 public:
   // This is a convention that makes sure this function is abstract
   // this patter is called pure void
-  virtual ~IVulkanApplication() = 0;
+  virtual ~IApplication() = 0;
   virtual void run() = 0;
 };
 
-std::unique_ptr<IVulkanApplication> newVulkanApplication(const int p_width,
-                                                         const int p_height);
+/**
+ * @brief Create a Application object
+ *
+ * @param p_width
+ * @param p_height
+ * @return std::unique_ptr<IApplication>
+ */
+std::unique_ptr<IApplication> createApplication(const int p_width,
+                                                const int p_height);
 
 } // namespace vke::platform
