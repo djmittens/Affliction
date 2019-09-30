@@ -24,7 +24,7 @@ target_include_directories(VulkanExperiment PUBLIC
     ${Vulkan_INCLUDE_DIR}
     ${PROJECT_INCLUDE_DIR})
     # "$<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>")
-target_link_libraries(VulkanExperiment PUBLIC glfw::glfw glm::glm Boost::filesystem PRIVATE ${Vulkan_LIBRARIES})
+target_link_libraries(VulkanExperiment PUBLIC glfw::glfw glm::glm Boost::filesystem Boost::log PRIVATE ${Vulkan_LIBRARIES})
 
 # this is a hack for now until i learn more about the different C++ features and work through the compilation
 target_compile_features(VulkanExperiment PUBLIC cxx_std_17)
