@@ -36,7 +36,7 @@ add_library(glm::glm ALIAS glm_static)
 # set(BOOST_LIBRARYDIR "C:/lib/boost_1_71_0/stage/lib")
 # set(Boost_ADDITIONAL_VERSIONS "1.71.0")
 set(Boost_DETAILED_FAILURE_MSG ON)
-# set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 # set(Boost_USE_STATIC_RUNTIME ON)
 

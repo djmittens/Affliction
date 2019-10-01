@@ -8,7 +8,7 @@
             "name": "(lldb | POSIX) Launch Werld",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/Werld/werld",
+            "program": "${workspaceFolder}/build/bin/werld",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/VulkanExperiment",
