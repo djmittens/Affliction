@@ -19,7 +19,7 @@ find_package(Boost 1.70.0 REQUIRED COMPONENTS log)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
-add_library(VulkanExperiment src/experiment.cpp )
+add_library(VulkanExperiment src/experiment.cpp src/logging.cpp)
 
 target_include_directories(VulkanExperiment INTERFACE include/)
 

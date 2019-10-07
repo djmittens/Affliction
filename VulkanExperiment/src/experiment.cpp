@@ -69,10 +69,9 @@ IApplication::~IApplication() {}
 
 class HelloTriangleApplication : public IApplication {
 public:
-  HelloTriangleApplication(
-      std::shared_ptr<vke::platform::logging::ILogger> p_logger) {
+  HelloTriangleApplication() {
     // TODO i need to get rid of this thing.
-    UNUSED(p_logger);
+    // UNUSED(p_logger);
   }
   void run() override {
     initWindow();
@@ -1300,8 +1299,8 @@ private:
 };
 
 std::unique_ptr<IApplication> createApplication() {
-  auto logger = std::shared_ptr<vke::platform::logging::NoOpLogger>(
-      new vke::platform::logging::NoOpLogger());
-  return std::unique_ptr<IApplication>(new HelloTriangleApplication(logger));
+  // auto logger = std::shared_ptr<vke::platform::logging::NoOpLogger>(
+  //     new vke::platform::logging::NoOpLogger());
+  return std::unique_ptr<IApplication>(new HelloTriangleApplication());
 }
 } // namespace vke::platform

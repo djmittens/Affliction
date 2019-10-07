@@ -8,9 +8,11 @@
  * dynamic logging. Wish me luck on this super challenge.
  *
  */
-namespace vke::platform::logging {
+namespace vke::log {
 static const char TAB = '\t';
 static const char ENDL = '\n';
+
+inline void info(const std::string fmt, ...);
 
 /**
  * @brief What error messages to log
@@ -64,4 +66,4 @@ class NoOpLoggerFactory : public ILoggerFactory {
 std::unique_ptr<ILoggerFactory>
 createStdStreamLoggerFactory(const ELogLevel logLevel = ELogLevel::INFO);
 
-} // namespace vke::platform::logging
+} // namespace vke::log
