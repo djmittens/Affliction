@@ -19,6 +19,8 @@
 // Files and shit
 #include <fstream>
 
+#include <boost/log/trivial.hpp>
+
 /*
   Some serious TODO list for me to tackle at some point on this project.
 
@@ -68,8 +70,10 @@ IApplication::~IApplication() {}
 class HelloTriangleApplication : public IApplication {
 public:
   HelloTriangleApplication(
-      std::shared_ptr<vke::platform::logging::ILogger> p_logger)
-      : m_logger(p_logger) {}
+      std::shared_ptr<vke::platform::logging::ILogger> p_logger) {
+    // TODO i need to get rid of this thing.
+    UNUSED(p_logger);
+  }
   void run() override {
     initWindow();
     initVulkan();
@@ -78,7 +82,6 @@ public:
   }
 
 private:
-  std::shared_ptr<vke::platform::logging::ILogger> m_logger;
   // Useful junk for logging to somewhere
   // Window junk i dunno
   GLFWwindow *window = nullptr;
@@ -156,10 +159,12 @@ private:
                                              extensions.data());
 
       // std::cout << "available extensions:" << vke::platform::ENDL;
-      m_logger->info("available extensions:");
+      // m_logger->info("available extensions:");
+      BOOST_LOG_TRIVIAL(info) << "available extensions:";
 
       for (const auto &extension : extensions) {
-        m_logger->info("\t" + std::string(extension.extensionName));
+        // m_logger->info("\t" + std::string(extension.extensionName));
+        BOOST_LOG_TRIVIAL(info) << std::string(extension.extensionName);
         // std::cout << vke::platform::TAB <<
         //           << vke::platform::ENDL;
       }
@@ -211,7 +216,8 @@ private:
       throw std::runtime_error("failed to create a vulkan instance!");
     } else {
       // std::cout << "Successfully created a Vulkan instance !!!!" << ENDL;
-      m_logger->info("Successfully created a Vulkan instance !!!!");
+      BOOST_LOG_TRIVIAL(info) << "Successfully created a Vulkan instance !!!!";
+      // m_logger->info("Successfully created a Vulkan instance !!!!");
     }
   }
 
@@ -221,7 +227,8 @@ private:
       return;
 
     // std::cout << "setting up the debug messenger." << ENDL;
-    m_logger->info("setting up the debug messenger.");
+    BOOST_LOG_TRIVIAL(info) << "setting up the debug messenger.";
+    // m_logger->info("setting up the debug messenger.");
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
     populateDebugMessengerCreateInfo(createInfo);
@@ -336,9 +343,13 @@ private:
         //     "
         //     << rating << ENDL;
 
-        m_logger->info(std::string(
-            "Found a suitable physical device i can use! with a score of: " +
-            rating));
+        BOOST_LOG_TRIVIAL(debug)
+            << "Found a suitable physical device i can use! with a score of:"
+            << rating;
+
+        // m_logger->info(std::string(
+        //     "Found a suitable physical device i can use! with a score of: " +
+        //     rating));
 
         physicalDevice = d;
       } else {
@@ -416,7 +427,9 @@ private:
       if (!requiredExtensions.empty()) {
         // std::cout << "required extensions were not found on a device" <<
         // ENDL;
-        m_logger->error("required extensions were not found on a device");
+        BOOST_LOG_TRIVIAL(error)
+            << "required extensions were not found on a device";
+        // m_logger->error("required extensions were not found on a device");
         return 0;
       }
     }
@@ -595,7 +608,8 @@ private:
                      &presentationQueue);
 
     // std::cout << "created a logical device !" << ENDL;
-    m_logger->info("created a logical device !");
+    BOOST_LOG_TRIVIAL(debug) << "created a logical device !";
+    // m_logger->info("created a logical device !");
   }
 
   void createSwapChain() {
@@ -635,15 +649,20 @@ private:
       if (indices.graphicsFamily != indices.presentFamily) {
         // std::cout << "creating the slow VK_SHARING_MODE_CONCURRENT mode "
         //           << ENDL;
-        m_logger->info(
-            std::string("creating the slow VK_SHARING_MODE_CONCURRENT mode"));
+        BOOST_LOG_TRIVIAL(debug)
+            << "creating the slow VK_SHARING_MODE_CONCURRENT mode ";
+        // m_logger->info(
+        //     std::string("creating the slow VK_SHARING_MODE_CONCURRENT
+        //     mode"));
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         createInfo.queueFamilyIndexCount = 2;
         createInfo.pQueueFamilyIndices = queueFamilyIndicies;
       } else {
         // std::cout << "creating the fast VK_SHARING_MODE_EXCLUSIVE mode "
         //           << ENDL;
-        m_logger->info("creating the fast VK_SHARING_MODE_EXCLUSIVE mode ");
+        BOOST_LOG_TRIVIAL(debug)
+            << "creating the fast VK_SHARING_MODE_EXCLUSIVE mode";
+        // m_logger->info("creating the fast VK_SHARING_MODE_EXCLUSIVE mode ");
 
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         createInfo.queueFamilyIndexCount = 0;
@@ -1164,6 +1183,7 @@ private:
     // std::cout << "validation layer::" << pCallbackData->pMessage << ENDL;
     // m_logger->info("validation layer::" +
     // std::string(pCallbackData->pMessage));
+    BOOST_LOG_TRIVIAL(debug) << "validation layer::" << pCallbackData->pMessage;
 
     if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
       // An important message that we would show.

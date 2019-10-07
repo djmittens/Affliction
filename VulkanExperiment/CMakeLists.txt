@@ -14,17 +14,23 @@ set(PROJECT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # find_package(glfw REQUIRED)
 # find_package(glm REQUIRED)
-# find_package(Vulkan REQUIRED)
+find_package(Vulkan REQUIRED)
+find_package(Boost 1.70.0 REQUIRED COMPONENTS log)
+find_package(glfw3 CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 add_library(VulkanExperiment src/experiment.cpp )
 
-target_include_directories(VulkanExperiment PUBLIC 
-    glfw::glfw 
-    glm::glm 
-    ${Vulkan_INCLUDE_DIR}
-    ${PROJECT_INCLUDE_DIR})
-    # "$<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>")
-target_link_libraries(VulkanExperiment PUBLIC glfw::glfw glm::glm Boost::filesystem Boost::log PRIVATE ${Vulkan_LIBRARIES})
+target_include_directories(VulkanExperiment INTERFACE include/)
+
+target_include_directories(VulkanExperiment PRIVATE
+    ${Boost_INCLUDE_DIR}
+    glfw
+    glm
+    Vulkan::Vulkan
+    "$<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>")
+
+target_link_libraries(VulkanExperiment PRIVATE glfw glm Boost::log Vulkan::Vulkan)
 
 # this is a hack for now until i learn more about the different C++ features and work through the compilation
 target_compile_features(VulkanExperiment PUBLIC cxx_std_17)

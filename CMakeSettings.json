@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "x86-Debug",
+            "generator": "Visual Studio 19 2019",
+            "configurationType": "Debug",
+            "buildRoot": "${workspaceRoot}/build",
+            "cmakeCommandArgs": "",
+            "buildCommandArgs": "-m:12 -v:minimal -p:PreferredToolArchitecture=x64",
+            "variables": [
+                {
+                    "name": "CMAKE_TOOLCHAIN_FILE",
+                    "value": "C:/lib/vcpkg/scripts/buildsystems/vcpkg.cmake"
+                }
+            ]
+        }
+    ]
+}
