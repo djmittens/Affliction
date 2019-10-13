@@ -2,22 +2,45 @@
 #include "boost/format/format_implementation.hpp"
 #include "boost/log/trivial.hpp"
 #include <cstdio>
+#include <cstdarg>
 #include <iostream>
+#include <string>
+// #include <move>
 
 
 namespace vke::log {
-inline void info(const std::string fmt, ...) {
-  std::cout << "Hello World";
+inline std::string format(const std::string pFmt, va_list pArgs) {
+
+  va_list acopy;
+  va_copy(acopy, pArgs);
+  const int len = std::vsnprintf(NULL, 0, pFmt.c_str(), acopy);
+  va_end(acopy);
+
+  std::string out;
+  out.resize(len + 1);
+
+  std::vsnprintf(out.data(), out.size(), pFmt.c_str(), pArgs);
+
+  return out;
+}
+
+inline void info(const std::string pFmt, ...) {
 #if defined(ENABLE_LOG)
-  char buf[256];
   va_list args;
-  va_start(args, fmt);
-
-  std::vsnprintf(fmt.data(), len + 1, fmt, va_list);
+  va_start(args, pFmt);
+  BOOST_LOG_TRIVIAL(info) << format(pFmt.c_str(), args); 
   va_end(args);
-
-  std::string out(buf);
-  BOOST_LOG_TRIVIAL(info) << out;
 #endif
 }
+
+inline void debug(const std::string pFmt, ...) {
+#if defined(ENABLE_LOG)
+  va_list args;
+  va_start(args, pFmt);
+  BOOST_LOG_TRIVIAL(debug) << format(pFmt.c_str(), args); 
+  va_end(args);
+#endif
+}
+
+
 } // namespace vke::log

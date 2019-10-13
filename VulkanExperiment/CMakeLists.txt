@@ -15,20 +15,24 @@ set(PROJECT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # find_package(glfw REQUIRED)
 # find_package(glm REQUIRED)
 find_package(Vulkan REQUIRED)
-find_package(Boost 1.70.0 REQUIRED COMPONENTS log)
-find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(glfw3 3.3.0 CONFIG REQUIRED)
+find_package(Boost 1.70.0 REQUIRED COMPONENTS log)
 
-add_library(VulkanExperiment src/experiment.cpp src/logging.cpp)
+add_library(VulkanExperiment SHARED src/experiment.cpp src/logging.cpp)
 
-target_include_directories(VulkanExperiment INTERFACE include/)
+# target_include_directories(VulkanExperiment INTERFACE ${PROJECT_INCLUDE_DIR})
 
-target_include_directories(VulkanExperiment PRIVATE
+target_include_directories(VulkanExperiment 
+PUBLIC
+"$<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>"
+
+PRIVATE
     ${Boost_INCLUDE_DIR}
     glfw
     glm
     Vulkan::Vulkan
-    "$<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>")
+    )
 
 target_link_libraries(VulkanExperiment PRIVATE glfw glm Boost::log Vulkan::Vulkan)
 

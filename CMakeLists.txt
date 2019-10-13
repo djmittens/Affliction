@@ -15,92 +15,12 @@ if(WIN32)
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
-# Disable some extraneous stuff
-# set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-# set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-# set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-# set(GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
-
-# find_package(Vulkan REQUIRED)
-
-set(MY_PROJECT_DEPENDENCIES glm glfw3 boost-log vulkan)
-
-# shamelessly borrowing this setup for the toolchain from my 
-if(NOT DEFINED ${CMAKE_TOOLCHAIN_FILE})
-  if(NOT DEFINED ENV{VCPKG_ROOT})
-    if(WIN32)
-      set(VCPKG_ROOT $ENV{HOMEDRIVE}$ENV{HOMEPATH}/vcpkg)
-    else()
-      set(VCPKG_ROOT $ENV{HOME}/.vcpkg)
-    endif()
-  else()
-    set(VCPKG_ROOT $ENV{VCPKG_ROOT})
-  endif()
-
-  if(NOT EXISTS ${VCPKG_ROOT})
-    message("Cloning vcpkg in ${VCPKG_ROOT}")
-    execute_process(COMMAND git clone https://github.com/Microsoft/vcpkg.git ${VCPKG_ROOT})
-    # If a reproducible build is desired (and potentially old libraries are # ok), uncomment the
-    # following line and pin the vcpkg repository to a specific githash.
-    # execute_process(COMMAND git checkout 745a0aea597771a580d0b0f4886ea1e3a94dbca6 WORKING_DIRECTORY ${VCPKG_ROOT})
-  else()
-    # The following command has no effect if the vcpkg repository is in a detached head state.
-    message("Auto-updating vcpkg in ${VCPKG_ROOT}")
-    execute_process(COMMAND git pull WORKING_DIRECTORY ${VCPKG_ROOT})
-  endif()
-
-  if(NOT EXISTS ${VCPKG_ROOT}/README.md)
-    message(FATAL_ERROR "***** FATAL ERROR: Could not clone vcpkg *****")
-  endif()
-
-  if(WIN32)
-    set(BOOST_INCLUDEDIR ${VCPKG_ROOT}/installed/x86-windows/include)
-    set(VCPKG_EXEC ${VCPKG_ROOT}/vcpkg.exe)
-    set(VCPKG_BOOTSTRAP ${VCPKG_ROOT}/bootstrap-vcpkg.bat)
-  else()
-    set(VCPKG_EXEC ${VCPKG_ROOT}/vcpkg)
-    set(VCPKG_BOOTSTRAP ${VCPKG_ROOT}/bootstrap-vcpkg.sh)
-  endif()
-
-  if(NOT EXISTS ${VCPKG_EXEC})
-    message("Bootstrapping vcpkg in ${VCPKG_ROOT}")
-    execute_process(COMMAND ${VCPKG_BOOTSTRAP} WORKING_DIRECTORY ${VCPKG_ROOT})
-  endif()
-
-  if(NOT EXISTS ${VCPKG_EXEC})
-    message(FATAL_ERROR "***** FATAL ERROR: Could not bootstrap vcpkg *****")
-  endif()
-
-  set(CMAKE_TOOLCHAIN_FILE ${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake CACHE STRING "")
-
-  message(STATUS "***** Checking project third party dependencies in ${VCPKG_ROOT} *****")
-  # This only works with 64 bit builds for windows
-  execute_process(COMMAND ${VCPKG_EXEC} install ${MY_PROJECT_DEPENDENCIES} --triplet x64-windows-static WORKING_DIRECTORY ${VCPKG_ROOT})
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+  add_compile_definitions(
+    ENABLE_LOG
+  )
+else()
 endif()
-
-# add_subdirectory(extern/glfw)
-# add_library(glfw::glfw ALIAS glfw)
-# add_subdirectory(extern/glm)
-# GOOFY AF, hack to make cross module dependencies work
-# add_library(glm::glm ALIAS glm_static)
-
-# Phew get to disable this after a bout of debugging.
-# set(Boost_DEBUG ON)
-# set(BOOST_ROOT "C:/lib/boost_1_71_0")
-# set(BOOST_INCLUDEDIR "C:/lib/boost_1_71_0")
-# set(BOOST_LIBRARYDIR "C:/lib/boost_1_71_0/stage/lib")
-# set(Boost_ADDITIONAL_VERSIONS "1.71.0")
-# set(Boost_DETAILED_FAILURE_MSG ON)
-# set(Boost_USE_STATIC_LIBS ON)
-# set(Boost_USE_MULTITHREADED ON)
-# set(Boost_USE_STATIC_RUNTIME ON)
-
-
-# find_package(Boost REQUIRED COMPONENTS log)
-# find_package(glfw3 REQUIRED)
-# find_package(glm REQUIRED)
-# add_library(glm::glm ALIAS glm)
-# add_library(glfw::glfw ALIAS glfw)
 
 #Lulz
 if(MSVC)

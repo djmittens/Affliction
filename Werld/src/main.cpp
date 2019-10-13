@@ -1,6 +1,5 @@
 #include <VulkanExperiment/experiment.hpp>
 #include <VulkanExperiment/logging.hpp>
-#include <boost/log/trivial.hpp>
 #include <iostream>
 
 int main() {

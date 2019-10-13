@@ -1,6 +1,6 @@
 #pragma once
 
-#include "logging.hpp"
+#include "vke.hpp"
 #include <memory>
 
 namespace vke::platform {
@@ -9,7 +9,7 @@ namespace vke::platform {
  * @brief This is main configuration for a running application, that will allow
  * you to configure different aspects of stuff.
  */
-class IApplication {
+VKE_EXPORT class IApplication {
 public:
   // This is a convention that makes sure this function is abstract
   // this patter is called pure void
