@@ -1188,10 +1188,6 @@ private:
                 void *pUserData) {
     UNUSED(messageType);
     UNUSED(pUserData);
-    // std::cout << "validation layer::" << pCallbackData->pMessage << ENDL;
-    // m_logger->info("validation layer::" +
-    // std::string(pCallbackData->pMessage));
-    // BOOST_LOG_TRIVIAL(debug) << "validation layer::" << pCallbackData->pMessage;
     vke::log::debug(std::string("validation layer::%s"), pCallbackData->pMessage);
 
     if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
