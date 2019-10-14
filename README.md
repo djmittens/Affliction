@@ -42,16 +42,17 @@ This will allow you to build 64 bit binary projects as well as specify location 
 
 In order to build this, please use `llvm-clang` and `ninja` do the following
 however it does not link on windows for some reason 🤷‍♀️
+So maybe figure out what works on windows rather than this?
 
 ```powershell
 mkdir build && cd build
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_RC_COMPILER=llvm-rc ..
+cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_RC_COMPILER=llvm-rc ..
 cmake --build .
 ```
 
 
 ```powershell
-cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/Users/djmit/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+cmake -G"Visual Studio 16 2019" -Ax64 -DCMAKE_TOOLCHAIN_FILE=C:/Users/djmit/vcpkg/scripts/buildsystems/vcpkg.cmake ..
 ```
 
 ## Compiling shaders
