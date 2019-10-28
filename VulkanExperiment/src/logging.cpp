@@ -1,46 +1,57 @@
 #include "VulkanExperiment/logging.hpp"
-#include "boost/format/format_implementation.hpp"
-#include "boost/log/trivial.hpp"
-#include <cstdio>
+#include <boost/format/format_implementation.hpp>
+#include <boost/iostreams/categories.hpp>
+#include <boost/iostreams/device/null.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <boost/log/trivial.hpp>
 #include <cstdarg>
+#include <cstdio>
+#include <iosfwd>
 #include <iostream>
+#include <ostream>
 #include <string>
+#include <vector>
+
 // #include <move>
 
-
 namespace vke::log {
-inline std::string format(const std::string pFmt, va_list pArgs) {
+namespace io = boost::iostreams;
 
-  va_list acopy;
-  va_copy(acopy, pArgs);
-  const int len = std::vsnprintf(NULL, 0, pFmt.c_str(), acopy);
-  va_end(acopy);
+// class Logger_Sink {
+// public:
+//   typedef char char_type;
+//   typedef boost::iostreams::sink_tag category;
 
-  std::string out;
-  out.resize(len + 1);
+//   Logger_Sink() = default;
 
-  std::vsnprintf(out.data(), out.size(), pFmt.c_str(), pArgs);
+//   virtual ~Logger_Sink() = default;
+//   virtual std::streamsize write(char_type const *s, std::streamsize n) = 0;
+// };
 
-  return out;
-}
+class CoutSink {
+public:
+  typedef char char_type;
+  typedef boost::iostreams::sink_tag category;
 
-inline void info(const std::string pFmt, ...) {
+  CoutSink() = default;
+  ~CoutSink() = default;
+
+  std::streamsize write(char_type const *s, std::streamsize n) {
+    BOOST_LOG_TRIVIAL(info) << std::string(s, n);
+    return n;
+  }
+};
+
+io::stream<io::null_sink> nullOstream((io::null_sink()));
+
+std::ostream &info() {
 #if defined(ENABLE_LOG)
-  va_list args;
-  va_start(args, pFmt);
-  BOOST_LOG_TRIVIAL(info) << format(pFmt.c_str(), args); 
-  va_end(args);
+  io::stream_buffer<CoutSink> cout_buf((CoutSink()));
+  std::ostream whut(&cout_buf);
+  return whut;
+#else
+  return nullOstream;
 #endif
 }
-
-inline void debug(const std::string pFmt, ...) {
-#if defined(ENABLE_LOG)
-  va_list args;
-  va_start(args, pFmt);
-  BOOST_LOG_TRIVIAL(debug) << format(pFmt.c_str(), args); 
-  va_end(args);
-#endif
-}
-
 
 } // namespace vke::log

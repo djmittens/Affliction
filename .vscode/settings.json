@@ -99,7 +99,8 @@
         "xstring": "cpp",
         "xtr1common": "cpp",
         "xtree": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "concepts": "cpp"
     },
     "cSpell.enabled": false,
     "editor.formatOnSave": true,
