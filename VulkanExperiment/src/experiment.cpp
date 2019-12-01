@@ -72,6 +72,8 @@ public:
   HelloTriangleApplication() {
     // TODO i need to get rid of this thing.
     // UNUSED(p_logger);
+    auto logger = vke::log::LazyLogger(std::move(vke::log::crapLogger()));
+    m_logger = std::make_unique<vke::log::LazyLogger>(std::move(logger));
   }
   void run() override {
     initWindow();
@@ -120,6 +122,13 @@ private:
   const std::vector<const char *> validationLayers = {
       "VK_LAYER_KHRONOS_validation"};
 
+  /**
+   * my spiffy little logging implementation.
+   */
+  // vke::log::LazyLogger
+  //     m_logger(std::shared_ptr<vke::log::ILogger>(crapLogger()));
+  std::unique_ptr<vke::log::LazyLogger> m_logger;
+
 #ifdef NDEBUG
   const bool enableValidationLayers = false;
 #else
@@ -159,14 +168,17 @@ private:
 
       // std::cout << "available extensions:" << vke::platform::ENDL;
       // m_logger->info("available extensions:");
-      vke::log::debug() << std::string("available extensions:");
+      // vke::log::debug() << std::string("available extensions:");
+      m_logger->debug(VKE_LOG("available extensions:"));
 
       for (const auto &extension : extensions) {
         // m_logger->info("\t" + std::string(extension.extensionName));
         // BOOST_LOG_TRIVIAL(info) << std::string(extension.extensionName);
-        vke::log::debug() << std::string(extension.extensionName);
+        // vke::log::debug() << std::string(extension.extensionName);
         // std::cout << vke::platform::TAB <<
         //           << vke::platform::ENDL;
+        m_logger->debug(
+            VKE_LOG(vke::log::TAB + std::string(extension.extensionName)));
       }
     }
   }
@@ -218,9 +230,10 @@ private:
       // std::cout << "Successfully created a Vulkan instance !!!!" << ENDL;
       // BOOST_LOG_TRIVIAL(info) << "Successfully created a Vulkan instance
       // !!!!";
-      vke::log::debug() << std::string(
-          "Successfully created a Vulkan instance !!!!");
+      // vke::log::debug() << std::string(
+      //     "Successfully created a Vulkan instance !!!!");
       // m_logger->info("Successfully created a Vulkan instance !!!!");
+      m_logger->debug(VKE_LOG("Successfully created a Vulkan instance !!!!"));
     }
   }
 
@@ -232,7 +245,8 @@ private:
     // std::cout << "setting up the debug messenger." << ENDL;
     // BOOST_LOG_TRIVIAL(info) << "setting up the debug messenger.";
     // m_logger->info("setting up the debug messenger.");
-    vke::log::debug() << "setting up the debug messenger.";
+    // vke::log::debug() << "setting up the debug messenger.";
+    m_logger->debug(VKE_LOG("setting up the debug messenger."));
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
     populateDebugMessengerCreateInfo(createInfo);
@@ -351,12 +365,18 @@ private:
         //     << "Found a suitable physical device i can use! with a score of:"
         //     << rating;
 
-        vke::log::debug()
-            << "Found a suitable physical device i can  use! with a score of: "
-            << rating;
+        // vke::log::debug()
+        //     << "Found a suitable physical device i can  use! with a score of:
+        //     "
+        //     << rating;
         // m_logger->info(std::string( //     "Found a suitable physical device
-        // i can use! with a score of: " +
+        //     i can use !with a score of
+        //     : " +
         //     rating));
+        // k
+        m_logger->info(VKE_LOG(
+            "Found a suitable physical device i can  use! with a score of: %i",
+            rating));
 
         physicalDevice = d;
       } else {
@@ -437,7 +457,10 @@ private:
         // BOOST_LOG_TRIVIAL(error)
         //     << "required extensions were not found on a device";
         // m_logger->error("required extensions were not found on a device");
-        vke::log::debug() << "required extensions were not found on a device";
+        // vke::log::debug() << "required extensions were not found on a
+        // device";
+        m_logger->debug(
+            VKE_LOG("required extensions were not found on a device"));
         return 0;
       }
     }
@@ -617,7 +640,8 @@ private:
 
     // std::cout << "created a logical device !" << ENDL;
     // BOOST_LOG_TRIVIAL(debug) << "created a logical device !";
-    vke::log::debug() << "created a logical device !";
+    // vke::log::debug() << "created a logical device !";
+    m_logger->debug(VKE_LOG("created a logical device !"));
     // m_logger->info("created a logical device !");
   }
 
@@ -660,8 +684,10 @@ private:
         //           << ENDL;
         // BOOST_LOG_TRIVIAL(debug)
         //     << "creating the slow VK_SHARING_MODE_CONCURRENT mode ";
-        vke::log::debug()
-            << "creating the slow VK_SHARING_MODE_CONCURRENT mode ";
+        // vke::log::debug()
+        //     << "creating the slow VK_SHARING_MODE_CONCURRENT mode ";
+        m_logger->debug(
+            VKE_LOG("creating the slow VK_SHARING_MODE_CONCURRENT mode "));
         // m_logger->info(
         //     std::string("creating the slow VK_SHARING_MODE_CONCURRENT
         //     mode"));
@@ -673,7 +699,10 @@ private:
         //           << ENDL;
         // BOOST_LOG_TRIVIAL(debug)
         //     << "creating the fast VK_SHARING_MODE_EXCLUSIVE mode";
-        vke::log::debug() << "creating the fast VK_SHARING_MODE_EXCLUSIVE mode";
+        // vke::log::debug() << "creating the fast VK_SHARING_MODE_EXCLUSIVE
+        // mode";
+        m_logger->debug(
+            VKE_LOG("creating the fast VK_SHARING_MODE_EXCLUSIVE mode"));
         // m_logger->info("creating the fast VK_SHARING_MODE_EXCLUSIVE mode ");
 
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -1192,7 +1221,8 @@ private:
                 void *pUserData) {
     UNUSED(messageType);
     UNUSED(pUserData);
-    vke::log::debug() << "validation layer::" << pCallbackData->pMessage;
+    // TODO: figure how to bind a logger to this callback :()
+    // vke::log::debug() << "validation layer::" << pCallbackData->pMessage;
 
     if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
       // An important message that we would show.
