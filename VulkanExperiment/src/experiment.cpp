@@ -159,12 +159,12 @@ private:
 
       // std::cout << "available extensions:" << vke::platform::ENDL;
       // m_logger->info("available extensions:");
-      vke::log::debug(std::string("available extensions:"));
+      vke::log::debug() << std::string("available extensions:");
 
       for (const auto &extension : extensions) {
         // m_logger->info("\t" + std::string(extension.extensionName));
         // BOOST_LOG_TRIVIAL(info) << std::string(extension.extensionName);
-        vke::log::debug(std::string(extension.extensionName));
+        vke::log::debug() << std::string(extension.extensionName);
         // std::cout << vke::platform::TAB <<
         //           << vke::platform::ENDL;
       }
@@ -218,8 +218,8 @@ private:
       // std::cout << "Successfully created a Vulkan instance !!!!" << ENDL;
       // BOOST_LOG_TRIVIAL(info) << "Successfully created a Vulkan instance
       // !!!!";
-      vke::log::debug(
-          std::string("Successfully created a Vulkan instance !!!!"));
+      vke::log::debug() << std::string(
+          "Successfully created a Vulkan instance !!!!");
       // m_logger->info("Successfully created a Vulkan instance !!!!");
     }
   }
@@ -232,7 +232,7 @@ private:
     // std::cout << "setting up the debug messenger." << ENDL;
     // BOOST_LOG_TRIVIAL(info) << "setting up the debug messenger.";
     // m_logger->info("setting up the debug messenger.");
-    vke::log::debug(std::string("setting up the debug messenger."));
+    vke::log::debug() << "setting up the debug messenger.";
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
     populateDebugMessengerCreateInfo(createInfo);
@@ -351,12 +351,11 @@ private:
         //     << "Found a suitable physical device i can use! with a score of:"
         //     << rating;
 
-        vke::log::debug(std::string("Found a suitable physical device i can "
-                                    "use! with a score of: %i"),
-                        rating);
-
-        // m_logger->info(std::string(
-        //     "Found a suitable physical device i can use! with a score of: " +
+        vke::log::debug()
+            << "Found a suitable physical device i can  use! with a score of: "
+            << rating;
+        // m_logger->info(std::string( //     "Found a suitable physical device
+        // i can use! with a score of: " +
         //     rating));
 
         physicalDevice = d;
@@ -438,8 +437,7 @@ private:
         // BOOST_LOG_TRIVIAL(error)
         //     << "required extensions were not found on a device";
         // m_logger->error("required extensions were not found on a device");
-        vke::log::debug(
-            std::string("required extensions were not found on a device"));
+        vke::log::debug() << "required extensions were not found on a device";
         return 0;
       }
     }
@@ -619,7 +617,7 @@ private:
 
     // std::cout << "created a logical device !" << ENDL;
     // BOOST_LOG_TRIVIAL(debug) << "created a logical device !";
-    vke::log::debug(std::string("created a logical device !"));
+    vke::log::debug() << "created a logical device !";
     // m_logger->info("created a logical device !");
   }
 
@@ -662,8 +660,8 @@ private:
         //           << ENDL;
         // BOOST_LOG_TRIVIAL(debug)
         //     << "creating the slow VK_SHARING_MODE_CONCURRENT mode ";
-        vke::log::debug(
-            std::string("creating the slow VK_SHARING_MODE_CONCURRENT mode "));
+        vke::log::debug()
+            << "creating the slow VK_SHARING_MODE_CONCURRENT mode ";
         // m_logger->info(
         //     std::string("creating the slow VK_SHARING_MODE_CONCURRENT
         //     mode"));
@@ -675,8 +673,7 @@ private:
         //           << ENDL;
         // BOOST_LOG_TRIVIAL(debug)
         //     << "creating the fast VK_SHARING_MODE_EXCLUSIVE mode";
-        vke::log::debug(
-            std::string("creating the fast VK_SHARING_MODE_EXCLUSIVE mode"));
+        vke::log::debug() << "creating the fast VK_SHARING_MODE_EXCLUSIVE mode";
         // m_logger->info("creating the fast VK_SHARING_MODE_EXCLUSIVE mode ");
 
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -1195,8 +1192,7 @@ private:
                 void *pUserData) {
     UNUSED(messageType);
     UNUSED(pUserData);
-    vke::log::debug(std::string("validation layer::%s"),
-                    pCallbackData->pMessage);
+    vke::log::debug() << "validation layer::" << pCallbackData->pMessage;
 
     if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
       // An important message that we would show.

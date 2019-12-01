@@ -13,6 +13,7 @@
 #include <vector>
 
 // #include <move>
+#define ENABLE_LOG
 
 namespace vke::log {
 namespace io = boost::iostreams;
@@ -45,6 +46,16 @@ public:
 io::stream<io::null_sink> nullOstream((io::null_sink()));
 
 std::ostream &info() {
+#if defined(ENABLE_LOG)
+  io::stream_buffer<CoutSink> cout_buf((CoutSink()));
+  std::ostream whut(&cout_buf);
+  return whut;
+#else
+  return nullOstream;
+#endif
+}
+
+std::ostream &debug() {
 #if defined(ENABLE_LOG)
   io::stream_buffer<CoutSink> cout_buf((CoutSink()));
   std::ostream whut(&cout_buf);

@@ -52,7 +52,7 @@ cmake --build .
 
 
 ```powershell
-cmake -G"Visual Studio 16 2019" -Ax64 -DCMAKE_TOOLCHAIN_FILE=C:/Users/djmit/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+cmake -G"Visual Studio 16 2019" -Ax64 -DCMAKE_TOOLCHAIN_FILE=C:/src/vcpkg/scripts/buildsystems/vcpkg.cmake ..
 ```
 
 ## Compiling shaders

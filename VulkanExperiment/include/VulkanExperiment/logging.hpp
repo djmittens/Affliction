@@ -28,9 +28,8 @@ template <typename... Ts> std::string format(const char *p_fmt, Ts... p_args) {
 // template <typename... Args>
 // inline void info(const char *p_fmt, Args... p_args) {}
 
-// std::ostream info();
-// std::ostream debug();
-// std::ostream error();
+std::ostream &info();
+std::ostream &debug();
 
 // template <typename... Args>
 // inline void error(const char *p_fmt, Args... p_args) {
