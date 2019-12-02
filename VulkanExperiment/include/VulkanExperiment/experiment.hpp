@@ -9,7 +9,7 @@ namespace vke::platform {
  * @brief This is main configuration for a running application, that will allow
  * you to configure different aspects of stuff.
  */
-VKE_EXPORT class IApplication {
+class IApplication {
 public:
   // This is a convention that makes sure this function is abstract
   // this patter is called pure void

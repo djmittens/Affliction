@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 #include <fmt/printf.h>
+#include <fmt/format.h>
+#include <fmt/color.h>
 
 namespace vke::log {
 
@@ -54,7 +56,10 @@ public:
   virtual Level logLevel() override { return Level::TRACE; }
   virtual void log(Event evt) {
     // std::cout << "[" << std::setw(5) << toString(evt.level) <<  "]" << TAB << evt.message << ENDL;
-    fmt::printf("[%s] \t %s\n", toString(evt.level), evt.message);
+    // auto lvl = fmt::format(fmt::emphasis::bold | fg(fmt::color::red), toString(evt.level));
+    auto lvl = toString(evt.level);
+
+    fmt::print("[{:<5}] {}\n", lvl, evt.message);
   }
 };
 
