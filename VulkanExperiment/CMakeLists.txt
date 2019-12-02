@@ -17,7 +17,11 @@ set(PROJECT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 find_package(Vulkan REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(glfw3 3.3.0 CONFIG REQUIRED)
-find_package(Boost 1.70.0 REQUIRED COMPONENTS log)
+find_package(GTest CONFIG REQUIRED)
+
+# find_package(Boost 1.70.0 REQUIRED COMPONENTS log)
+# string formatting for yo face !
+find_package(fmt CONFIG REQUIRED)
 
 add_library(VulkanExperiment SHARED src/experiment.cpp src/logging.cpp)
 
@@ -34,7 +38,8 @@ PRIVATE
     Vulkan::Vulkan
     )
 
-target_link_libraries(VulkanExperiment PRIVATE glfw glm Boost::log Vulkan::Vulkan)
+# target_link_libraries(VulkanExperiment PRIVATE glfw glm Boost::log Vulkan::Vulkan)
+target_link_libraries(VulkanExperiment PRIVATE glfw glm Vulkan::Vulkan fmt::fmt fmt::fmt-header-only)
 
 # this is a hack for now until i learn more about the different C++ features and work through the compilation
 target_compile_features(VulkanExperiment PUBLIC cxx_std_17)

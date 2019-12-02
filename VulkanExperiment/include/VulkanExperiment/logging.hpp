@@ -2,10 +2,12 @@
 
 #include "vke.hpp"
 #include <memory>
+#include <stdarg.h>
 #include <string>
 
-#define VKE_LOG(fmt, ...)                                                      \
-  vke::log::newEvent(__FILE__, __LINE__, fmt, __VA_ARGS__)
+// keeping this guy around as an example of variadic macros.
+// #define VKE_INFO(fmt, ...)                                                     \
+//   vke::log::newEvent(vke::log::Level::INFO, fmt, __VA_ARGS__)
 
 /**
  * @brief In this namespace, i do the impossible, I take on the problem of
@@ -16,110 +18,100 @@ namespace vke::log {
 static const char TAB = '\t';
 static const char ENDL = '\n';
 
-enum LogLevel { OFF = 0, ERROR = 1, WARN = 2, INFO = 3, DEBUG = 4, TRACE = 5 };
+enum Level { OFF = 0, ERR = 1, WARN = 2, INFO = 3, DEBUG = 4, TRACE = 5 };
 
-struct LogEvent {
+std::string toString(Level lvl);
+
+VKE_EXPORT struct Event {
   const std::string message;
-  const std::string file;
-  const int lineNumber;
+  const Level level;
   const long timestamp;
 };
 
-class ILogger {
+VKE_EXPORT class ILogger {
 public:
   virtual ~ILogger() = 0;
 
-  virtual LogLevel logLevel() = 0;
-  virtual void trace(LogEvent evt) = 0;
-  virtual void info(LogEvent evt) = 0;
-  virtual void debug(LogEvent evt) = 0;
-  virtual void warn(LogEvent evt) = 0;
-  virtual void error(LogEvent evt) = 0;
+  virtual Level logLevel() = 0;
+  virtual void log(Event evt) = 0;
 };
 
-// VKE_EXPORT inline void info(const std::string fmt, ...);
-// VKE_EXPORT inline void debug(const std::string fmt, ...);
+
+std::string format(const char* p_fmt, ...);
+
+// template <typename... Ts>
+// inline Event newEvent(Level level, const std::string fmt, Ts... args) {
+//   return Event{format(fmt.c_str(), args...), level, -1};
+// }
 
 class LazyLogger {
 private:
   std::shared_ptr<ILogger> m_logger;
-  LogLevel m_level;
+  Level m_level;
 
 public:
   LazyLogger(std::shared_ptr<ILogger> logger) : m_logger(logger) {
     m_level = logger->logLevel();
   }
 
-  inline void error(LogEvent evt) {
-    if (m_level >= LogLevel::ERROR) {
-      m_logger->info(evt);
-    }
-  };
+  inline void error(const std::string message) {
+    lazyLog(Level::ERR, message);
+  }
 
-  inline void warn(LogEvent evt) {
-    if (m_level >= LogLevel::WARN) {
-      m_logger->warn(evt);
-    }
-  };
+  template <typename... Ts>
+  inline void error(const std::string fmt, Ts... args) {
+    lazyLog(Level::ERR, fmt, args...);
+  }
 
-  inline void info(LogEvent evt) {
-    if (m_level >= LogLevel::INFO) {
-      m_logger->info(evt);
-    }
-  };
+  inline void warn(const std::string msg) {
+    lazyLog(Level::WARN, msg);
+  }
 
-  inline void debug(LogEvent evt) {
-    if (m_level >= LogLevel::DEBUG) {
-      m_logger->debug(evt);
-    }
-  };
+  template <typename... Ts>
+  inline void warn(const std::string fmt, Ts... args) {
+    lazyLog(Level::WARN, fmt, args...);
+  }
 
-  inline void trace(LogEvent evt) {
-    if (m_level >= LogLevel::TRACE) {
-      m_logger->trace(evt);
+  inline void info(const std::string fmt) {
+    lazyLog(Level::INFO, fmt);
+  }
+
+  template <typename... Ts>
+  inline void info(const std::string fmt, Ts... args) {
+    lazyLog(Level::INFO, fmt, args...);
+  }
+
+  inline void debug(const std::string fmt) {
+    lazyLog(Level::DEBUG, fmt);
+  }
+
+  template <typename... Ts>
+  inline void debug(const std::string fmt, Ts... args) {
+    lazyLog(Level::DEBUG, fmt, args...);
+  }
+
+  inline void trace(const std::string fmt) {
+    lazyLog(Level::TRACE, fmt);
+  }
+
+  template <typename... Ts>
+  inline void trace(const std::string fmt, Ts... args) {
+    lazyLog(Level::TRACE, fmt, args);
+  }
+
+  template <typename... Ts>
+  inline void lazyLog(Level level, const std::string fmt, Ts... args) {
+    lazyLog(level, format(fmt.c_str(), args...));
+  }
+
+  inline void lazyLog(Level level, const std::string message) {
+    if (m_level >= level) {
+      m_logger->log(Event{message, level, -1} );
     }
-  };
+
+  }
 };
 
-template <typename... Ts>
-std::string format(const std::string p_fmt, Ts... p_args) {
-  // Have to double call this function in order for the length to workout.
-  const auto ptr = p_fmt.c_str();
-  const int len = std::vsnprintf(NULL, 0, ptr, std::forward<Ts>(p_args)...);
-  std::string out;
-  out.resize(len + 1);
-  std::vsnprintf(out.data(), out.size(), ptr, std::forward<Ts>(p_args)...);
-  return out;
-}
-
-inline LogEvent newEvent(const std::string file, const int lineNumber,
-                         const std::string message) {
-  return LogEvent{message, file, lineNumber, -1};
-}
-
-template <typename... Ts>
-inline LogEvent newEvent(const std::string file, const int lineNumber,
-                         const std::string fmt, Ts... args) {
-  return LogEvent{format(fmt, args...), file, lineNumber, -1};
-}
-
 std::unique_ptr<ILogger> crapLogger();
-
-// template <typename... Args>
-// inline void info(const char *p_fmt, Args... p_args) {}
-
-// template <typename... Args>
-// inline void error(const char *p_fmt, Args... p_args) {
-// #if defined(ENABLE_LOG)
-//   BOOST_LOG_TRIVIAL(error) << format(p_fmt, p_args);
-// #endif
-// }
-
-// template <typename... Args>
-// inline void debug(const char *p_fmt, Args... p_args) {
-// #if defined(ENABLE_LOG)
-//   BOOST_LOG_TRIVIAL(debug) << format(p_fmt, p_args);
-// #endif
-// }
 
 } // namespace vke::log

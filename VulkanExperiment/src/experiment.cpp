@@ -169,7 +169,7 @@ private:
       // std::cout << "available extensions:" << vke::platform::ENDL;
       // m_logger->info("available extensions:");
       // vke::log::debug() << std::string("available extensions:");
-      m_logger->debug(VKE_LOG("available extensions:"));
+      m_logger->debug("available extensions:");
 
       for (const auto &extension : extensions) {
         // m_logger->info("\t" + std::string(extension.extensionName));
@@ -177,8 +177,7 @@ private:
         // vke::log::debug() << std::string(extension.extensionName);
         // std::cout << vke::platform::TAB <<
         //           << vke::platform::ENDL;
-        m_logger->debug(
-            VKE_LOG(vke::log::TAB + std::string(extension.extensionName)));
+        m_logger->debug(vke::log::TAB + std::string(extension.extensionName));
       }
     }
   }
@@ -233,7 +232,7 @@ private:
       // vke::log::debug() << std::string(
       //     "Successfully created a Vulkan instance !!!!");
       // m_logger->info("Successfully created a Vulkan instance !!!!");
-      m_logger->debug(VKE_LOG("Successfully created a Vulkan instance !!!!"));
+      m_logger->debug("Successfully created a Vulkan instance !!!!");
     }
   }
 
@@ -246,7 +245,7 @@ private:
     // BOOST_LOG_TRIVIAL(info) << "setting up the debug messenger.";
     // m_logger->info("setting up the debug messenger.");
     // vke::log::debug() << "setting up the debug messenger.";
-    m_logger->debug(VKE_LOG("setting up the debug messenger."));
+    m_logger->debug("setting up the debug messenger.");
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
     populateDebugMessengerCreateInfo(createInfo);
@@ -374,9 +373,9 @@ private:
         //     : " +
         //     rating));
         // k
-        m_logger->info(VKE_LOG(
+        m_logger->info(
             "Found a suitable physical device i can  use! with a score of: %i",
-            rating));
+            rating);
 
         physicalDevice = d;
       } else {
@@ -459,8 +458,7 @@ private:
         // m_logger->error("required extensions were not found on a device");
         // vke::log::debug() << "required extensions were not found on a
         // device";
-        m_logger->debug(
-            VKE_LOG("required extensions were not found on a device"));
+        m_logger->debug("required extensions were not found on a device");
         return 0;
       }
     }
@@ -641,7 +639,7 @@ private:
     // std::cout << "created a logical device !" << ENDL;
     // BOOST_LOG_TRIVIAL(debug) << "created a logical device !";
     // vke::log::debug() << "created a logical device !";
-    m_logger->debug(VKE_LOG("created a logical device !"));
+    m_logger->debug("created a logical device !");
     // m_logger->info("created a logical device !");
   }
 
@@ -686,8 +684,7 @@ private:
         //     << "creating the slow VK_SHARING_MODE_CONCURRENT mode ";
         // vke::log::debug()
         //     << "creating the slow VK_SHARING_MODE_CONCURRENT mode ";
-        m_logger->debug(
-            VKE_LOG("creating the slow VK_SHARING_MODE_CONCURRENT mode "));
+        m_logger->debug("creating the slow VK_SHARING_MODE_CONCURRENT mode ");
         // m_logger->info(
         //     std::string("creating the slow VK_SHARING_MODE_CONCURRENT
         //     mode"));
@@ -701,8 +698,7 @@ private:
         //     << "creating the fast VK_SHARING_MODE_EXCLUSIVE mode";
         // vke::log::debug() << "creating the fast VK_SHARING_MODE_EXCLUSIVE
         // mode";
-        m_logger->debug(
-            VKE_LOG("creating the fast VK_SHARING_MODE_EXCLUSIVE mode"));
+        m_logger->debug("creating the fast VK_SHARING_MODE_EXCLUSIVE mode");
         // m_logger->info("creating the fast VK_SHARING_MODE_EXCLUSIVE mode ");
 
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;

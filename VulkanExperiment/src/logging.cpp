@@ -1,68 +1,65 @@
 #include "VulkanExperiment/logging.hpp"
-#include <boost/format/format_implementation.hpp>
-#include <boost/iostreams/categories.hpp>
-#include <boost/iostreams/device/null.hpp>
-#include <boost/iostreams/stream.hpp>
-#include <boost/log/trivial.hpp>
 #include <cstdarg>
 #include <cstdio>
 #include <iosfwd>
 #include <iostream>
+#include <iomanip>
 #include <ostream>
 #include <string>
 #include <vector>
+#include <fmt/printf.h>
 
 namespace vke::log {
-namespace io = boost::iostreams;
 
-// class Logger_Sink {
-// public:
-//   typedef char char_type;
-//   typedef boost::iostreams::sink_tag category;
+ILogger::~ILogger() {}
 
-//   Logger_Sink() = default;
+std::string toString(Level lvl) {
+  std::string result = "OFF";
+  switch(lvl) {
+    case Level::ERR:
+      result = "ERROR";
+      break;
+    case Level::WARN:
+      result = "WARN";
+      break;
+    case Level::INFO:
+      result = "INFO";
+      break;
+    case Level::DEBUG:
+      result = "DEBUG";
+      break;
+    case Level::TRACE:
+      result = "TRACE";
+      break;
+  }
+  return result;
+}
 
-//   virtual ~Logger_Sink() = default;
-//   virtual std::streamsize write(char_type const *s, std::streamsize n) = 0;
-// };
+std::string format(const char* p_fmt, ...) {
+  va_list args;
+  va_start(args, p_fmt);
+  // Have to double call this function in order for the length to workout.
+  const int len = std::vsnprintf(NULL, 0, p_fmt, args);
+  std::string out;
+  out.resize(len + 1);
+  std::vsnprintf(out.data(), out.size(), p_fmt , args);
+  va_end(args);
+  return out;
+}
 
-// class CoutSink {
-// public:
-//   typedef char char_type;
-//   typedef boost::iostreams::sink_tag category;
-
-//   CoutSink() = default;
-//   ~CoutSink() = default;
-
-//   std::streamsize write(char_type const *s, std::streamsize n) { return n; }
-// };
-
-// io::stream<io::null_sink> nullOstream((io::null_sink()));
-
-// std::ostream &info() {
-// #if defined(ENABLE_LOG)
-//   io::stream_buffer<CoutSink> cout_buf((CoutSink()));
-//   std::ostream whut(&cout_buf);
-//   return whut;
-// #else
-//   return nullOstream;
-// #endif
-// }
-
-class BoostLogger : public ILogger {
+class CoutLogger : public ILogger {
 
 public:
-  ~BoostLogger() = default;
-  virtual void trace(LogEvent evt) {}
-  virtual LogLevel logLevel() override { return LogLevel::TRACE; }
-  virtual void info(LogEvent evt) { BOOST_LOG_TRIVIAL(info) << evt.message; }
-  virtual void debug(LogEvent evt) { BOOST_LOG_TRIVIAL(info) << evt.message; }
-  virtual void warn(LogEvent evt) {}
-  virtual void error(LogEvent evt) { BOOST_LOG_TRIVIAL(error) << evt.message; }
+  ~CoutLogger() = default;
+  virtual Level logLevel() override { return Level::TRACE; }
+  virtual void log(Event evt) {
+    // std::cout << "[" << std::setw(5) << toString(evt.level) <<  "]" << TAB << evt.message << ENDL;
+    fmt::printf("[%s] \t %s\n", toString(evt.level), evt.message);
+  }
 };
 
 std::unique_ptr<ILogger> crapLogger() {
-  return std::make_unique<ILogger>(BoostLogger());
+  return std::unique_ptr<ILogger>(new CoutLogger());
 }
 
 } // namespace vke::log

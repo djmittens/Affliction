@@ -15,13 +15,6 @@ if(WIN32)
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-  add_compile_definitions(
-    ENABLE_LOG
-  )
-else()
-endif()
-
 #Lulz
 if(MSVC)
   add_compile_options(

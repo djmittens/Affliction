@@ -103,6 +103,22 @@
         "concepts": "cpp"
     },
     "cSpell.enabled": false,
-    "editor.formatOnSave": true,
-    "cmake.useCMakeServer": false
+    "cmake.useCMakeServer": false,
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#74345a",
+        "activityBar.activeBorder": "#66843b",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#66843b",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "titleBar.activeBackground": "#51243f",
+        "titleBar.inactiveBackground": "#51243f99",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveForeground": "#e7e7e799",
+        "statusBar.background": "#51243f",
+        "statusBarItem.hoverBackground": "#74345a",
+        "statusBar.foreground": "#e7e7e7"
+    },
+    "peacock.color": "#51243f",
+    "editor.cursorStyle": "block-outline"
 }

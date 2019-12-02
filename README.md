@@ -4,10 +4,16 @@ For this project i will be following Vulkan api tutorial i found online, to hope
 
 The tutorial can be found [here](https://vulkan-tutorial.com)
 
-## Working with  github dependencies
-TODO: update this to work with vcpkg 7zip files.
 
-The dependencies are distributed in a precompiled fashion and are [documented here](deps/README.md)
+## VcPkg for dependencies.
+VcPkg is a microsoft built tool that will simplify the process of aquiring and installing all of the necessary libraries for you.
+The unfortunate part of this process however becomes the act of installing vcpkg and then installing the correct triplet for all of the dependencies.
+What the dependencies are, i have no idea but presumably i need to keep track of this list.
+
+for windows it would look something like this
+```
+vcpkg.exe install --triplet x64-windows glm glfw3 vulkan fmt 
+```
 
 ## Download library dependencies
 
