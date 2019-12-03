@@ -85,7 +85,7 @@ public:
 
   template <typename... Ts>
   inline void trace(const std::string fmt, Ts... args) {
-    lazyLog(Level::TRACE, fmt, args);
+    lazyLog(Level::TRACE, fmt, args...);
   }
 
   template <typename... Ts>

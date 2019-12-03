@@ -10,7 +10,7 @@ int main() {
     // vke::log::info() << "Starting the Werld app... "
     //                  << "Word "
     //                  << "...";
-    auto logger = vke::log::LazyLogger(std::move(vke::log::crapLogger()));
+    auto logger = vke::log::LazyLogger(vke::log::crapLogger());
     logger.info("Starting the Werld app and you are all invited !");
     
     app->run();
