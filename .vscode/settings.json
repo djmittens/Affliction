@@ -103,6 +103,12 @@
         "concepts": "cpp"
     },
     "cSpell.enabled": false,
+    "logViewer.watch": [
+        {
+            "title": "Game logs",
+            "pattern": "logs/*.log"
+        }
+    ],
     "cmake.useCMakeServer": false,
     "workbench.colorCustomizations": {
         "activityBar.background": "#74345a",
@@ -120,5 +126,6 @@
         "statusBar.foreground": "#e7e7e7"
     },
     "peacock.color": "#51243f",
-    "editor.cursorStyle": "block-outline"
+    "editor.cursorStyle": "block-outline",
+    "logViewer.showStatusBarItemOnChange": true
 }

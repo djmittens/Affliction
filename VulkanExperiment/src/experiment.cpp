@@ -8,6 +8,7 @@
 // #include <boost/bind.hpp>
 #include <cstdint>
 #include <cstdlib>
+#include <fmt/format.h>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -15,6 +16,7 @@
 #include <set>
 #include <stdexcept>
 #include <vector>
+
 
 // Files and shit
 #include <fstream>
@@ -72,7 +74,7 @@ public:
   HelloTriangleApplication() {
     // TODO i need to get rid of this thing.
     // UNUSED(p_logger);
-    auto logger = vke::log::LazyLogger(std::move(vke::log::crapLogger()));
+    auto logger = vke::log::LazyLogger(vke::log::fileLogger("logs/vulkan.log"));
     m_logger = std::make_unique<vke::log::LazyLogger>(std::move(logger));
   }
   void run() override {
@@ -166,17 +168,9 @@ private:
       vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount,
                                              extensions.data());
 
-      // std::cout << "available extensions:" << vke::platform::ENDL;
-      // m_logger->info("available extensions:");
-      // vke::log::debug() << std::string("available extensions:");
       m_logger->debug("available extensions:");
 
       for (const auto &extension : extensions) {
-        // m_logger->info("\t" + std::string(extension.extensionName));
-        // BOOST_LOG_TRIVIAL(info) << std::string(extension.extensionName);
-        // vke::log::debug() << std::string(extension.extensionName);
-        // std::cout << vke::platform::TAB <<
-        //           << vke::platform::ENDL;
         m_logger->debug(vke::log::TAB + std::string(extension.extensionName));
       }
     }
@@ -226,12 +220,6 @@ private:
     if (VK_SUCCESS != vkCreateInstance(&createInfo, nullptr, &instance)) {
       throw std::runtime_error("failed to create a vulkan instance!");
     } else {
-      // std::cout << "Successfully created a Vulkan instance !!!!" << ENDL;
-      // BOOST_LOG_TRIVIAL(info) << "Successfully created a Vulkan instance
-      // !!!!";
-      // vke::log::debug() << std::string(
-      //     "Successfully created a Vulkan instance !!!!");
-      // m_logger->info("Successfully created a Vulkan instance !!!!");
       m_logger->debug("Successfully created a Vulkan instance !!!!");
     }
   }
@@ -241,10 +229,6 @@ private:
     if (!enableValidationLayers)
       return;
 
-    // std::cout << "setting up the debug messenger." << ENDL;
-    // BOOST_LOG_TRIVIAL(info) << "setting up the debug messenger.";
-    // m_logger->info("setting up the debug messenger.");
-    // vke::log::debug() << "setting up the debug messenger.";
     m_logger->debug("setting up the debug messenger.");
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
@@ -355,27 +339,9 @@ private:
       auto [rating, d] = *candidates.rbegin();
 
       if (rating > 0) {
-        // std::cout
-        //     << "Found a suitable physical device i can use! with a score of:
-        //     "
-        //     << rating << ENDL;
-
-        // BOOST_LOG_TRIVIAL(debug)
-        //     << "Found a suitable physical device i can use! with a score of:"
-        //     << rating;
-
-        // vke::log::debug()
-        //     << "Found a suitable physical device i can  use! with a score of:
-        //     "
-        //     << rating;
-        // m_logger->info(std::string( //     "Found a suitable physical device
-        //     i can use !with a score of
-        //     : " +
-        //     rating));
-        // k
-        m_logger->info(
-            "Found a suitable physical device i can  use! with a score of: %i",
-            rating);
+        m_logger->debug(fmt::format(
+            "Found a suitable physical device i can  use! with a score of: {}",
+            rating));
 
         physicalDevice = d;
       } else {
@@ -451,14 +417,7 @@ private:
       }
 
       if (!requiredExtensions.empty()) {
-        // std::cout << "required extensions were not found on a device" <<
-        // ENDL;
-        // BOOST_LOG_TRIVIAL(error)
-        //     << "required extensions were not found on a device";
-        // m_logger->error("required extensions were not found on a device");
-        // vke::log::debug() << "required extensions were not found on a
-        // device";
-        m_logger->debug("required extensions were not found on a device");
+        m_logger->error("required extensions were not found on a device");
         return 0;
       }
     }

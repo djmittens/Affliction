@@ -33,7 +33,7 @@ public:
   virtual ~ILogger() = 0;
 
   virtual Level logLevel() = 0;
-  virtual void log(Event evt) = 0;
+  virtual void log(const Event &evt) = 0;
 };
 
 std::string format(const char *p_fmt, ...);
@@ -45,61 +45,43 @@ std::string format(const char *p_fmt, ...);
 
 class LazyLogger {
 private:
-  std::shared_ptr<ILogger> m_logger;
-  Level m_level;
+  std::unique_ptr<ILogger> m_logger;
 
 public:
-  LazyLogger(std::shared_ptr<ILogger> logger) : m_logger(logger) {
-    m_level = logger->logLevel();
+  LazyLogger(std::unique_ptr<ILogger> logger) : m_logger(std::move(logger)) {
   }
 
-  inline void error(const std::string message) { lazyLog(Level::ERR, message); }
-
-  template <typename... Ts>
-  inline void error(const std::string fmt, Ts... args) {
-    lazyLog(Level::ERR, fmt, args...);
+  inline void error (const std::string &message) {
+    lazyLog(Level::ERR, message);
+  }
+  inline void warn (const std::string &message) {
+    lazyLog(Level::WARN, message);
+  }
+  inline void info (const std::string &message) {
+    lazyLog(Level::INFO, message);
+  }
+  inline void debug (const std::string &message) {
+    lazyLog(Level::DEBUG, message);
+  }
+  inline void trace (const std::string &message) {
+    lazyLog(Level::TRACE, message);
   }
 
-  inline void warn(const std::string msg) { lazyLog(Level::WARN, msg); }
-
-  template <typename... Ts>
-  inline void warn(const std::string fmt, Ts... args) {
-    lazyLog(Level::WARN, fmt, args...);
-  }
-
-  inline void info(const std::string fmt) { lazyLog(Level::INFO, fmt); }
-
-  template <typename... Ts>
-  inline void info(const std::string fmt, Ts... args) {
-    lazyLog(Level::INFO, fmt, args...);
-  }
-
-  inline void debug(const std::string fmt) { lazyLog(Level::DEBUG, fmt); }
-
-  template <typename... Ts>
-  inline void debug(const std::string fmt, Ts... args) {
-    lazyLog(Level::DEBUG, fmt, args...);
-  }
-
-  inline void trace(const std::string fmt) { lazyLog(Level::TRACE, fmt); }
-
-  template <typename... Ts>
-  inline void trace(const std::string fmt, Ts... args) {
-    lazyLog(Level::TRACE, fmt, args...);
-  }
-
-  template <typename... Ts>
-  inline void lazyLog(Level level, const std::string fmt, Ts... args) {
-    lazyLog(level, format(fmt.c_str(), args...));
-  }
-
-  inline void lazyLog(Level level, const std::string message) {
-    if (m_level >= level) {
+  inline void lazyLog(const Level level, const std::string &message) { 
+    if (m_logger->logLevel() >= level) {
       m_logger->log(Event{message, level, -1});
+    }
+  }
+
+  inline void lazyLog(const Level level, const Event &event) {
+
+    if (m_logger->logLevel() >= level) {
+      m_logger->log(event);
     }
   }
 };
 
 std::unique_ptr<ILogger> crapLogger();
+std::unique_ptr<ILogger> fileLogger(const std::string &filename);
 
 } // namespace vke::log
