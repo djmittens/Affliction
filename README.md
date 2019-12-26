@@ -79,3 +79,12 @@ shaders> glslc.exe --target-env=vulkan1.1 helloworld.frag -o helloworld.frag.spv
 ```powershell
 clang++ -std=c++17 helloworld.cpp
 ```
+
+## TODO 
+- [ ] add support for GTest.
+- [ ] add micro benchmarks.
+- [ ]create graphics interface abstraction.
+- [ ] create support for macro based assertions that trigger debugger breakpoint.
+- [ ] Come up with a good strategy for configurability of layers. maybe
+- [ ] add micro benchmarks.
+- [ ] add profiler support.

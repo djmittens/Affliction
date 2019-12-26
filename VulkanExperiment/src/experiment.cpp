@@ -74,10 +74,12 @@ public:
   HelloTriangleApplication() {
     // TODO i need to get rid of this thing.
     // UNUSED(p_logger);
-    auto logger = vke::log::LazyLogger(vke::log::fileLogger("logs/vulkan.log"));
-    m_logger = std::make_unique<vke::log::LazyLogger>(std::move(logger));
+    //auto logger = vke::log::LazyLogger(vke::log::fileLogger("logs/vulkan.log"));
+    // m_logger = std::make_unique<vke::log::LazyLogger>(std::move(logger));
+    m_logger =  std::unique_ptr<vke::log::LazyLogger>(new vke::log::LazyLogger(vke::log::fileLogger("logs/vulkan.log")));
   }
-  void run() override {
+  void run(std::vector<std::string> args) final override  {
+    UNUSED(args);
     initWindow();
     initVulkan();
     mainLoop();
@@ -122,13 +124,15 @@ private:
       VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
   const std::vector<const char *> validationLayers = {
-      "VK_LAYER_KHRONOS_validation"};
+      // "VK_LAYER_KHRONOS_validation"
+      // aparantly this is a new type of validation layer that comes with the lunarg implementation? but why is the other one not working?
+      /// thats also hilarious
+      "VK_LAYER_LUNARG_standard_validation"
+      };
 
   /**
    * my spiffy little logging implementation.
    */
-  // vke::log::LazyLogger
-  //     m_logger(std::shared_ptr<vke::log::ILogger>(crapLogger()));
   std::unique_ptr<vke::log::LazyLogger> m_logger;
 
 #ifdef NDEBUG
@@ -218,6 +222,7 @@ private:
     }
 
     if (VK_SUCCESS != vkCreateInstance(&createInfo, nullptr, &instance)) {
+
       throw std::runtime_error("failed to create a vulkan instance!");
     } else {
       m_logger->debug("Successfully created a Vulkan instance !!!!");
