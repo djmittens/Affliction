@@ -15,20 +15,6 @@ if(WIN32)
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
-# Disable some extraneous stuff
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
-
-find_package(Vulkan REQUIRED)
-
-add_subdirectory(extern/glfw)
-add_library(glfw::glfw ALIAS glfw)
-add_subdirectory(extern/glm)
-# GOOFY AF, hack to make cross module dependencies work
-add_library(glm::glm ALIAS glm_static)
-
 #Lulz
 if(MSVC)
   add_compile_options(
@@ -89,23 +75,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-# if (BUILD_DOC)
-#   find_package(Doxygen)
-#   if (NOT DOXYGEN_FOUND)
-#     message("[Doxygen](http://www.doxygen.nl/) needs to be installed to generate documentation.")
-#   else()
-#     set(DOC_DEST_DIR ${CMAKE_BINARY_DIR} CACHE PATH "Path to the doxygen output")
-#     set(DOC_INPUT_ROOT_DIRS ${CMAKE_HOME_DIRECTORY} CACHE PATH "Path from where to start to parse")
-#     set(DOC_EXCLUDE_PATTERNS_DIRS ${CMAKE_BINARY_DIR} CACHE STRING "Regex patterns exclusion")
-#     set(DOC_COMMON_IMG_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Path where doxygen will find referenced images" )
-
-#     configure_file("docs/Doxyfile.in" ${CMAKE_BINARY_DIR}/Doxyfile @ONLY)
-#     add_custom_target(doxyDoc COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/"Doxyfile"
-#       WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}
-#       COMMENT "Building user's documentation into doxyDoc build dir..."
-#     )
-#   endif()
-# endif()
 
 # GCC ? 
 # add_compile_options(-fdiagnostics-color=always)
@@ -123,7 +92,7 @@ set(DOC_INPUT_ROOT_DIRS_LIST
   ${CMAKE_SOURCE_DIR}/VulkanExperiment/src 
   ${CMAKE_SOURCE_DIR}/VulkanExperiment/include 
   ${CMAKE_SOURCE_DIR}/Werld/src 
-  ${CMAKE_SOURCE_DIR}/Werld/include 
+  # ${CMAKE_SOURCE_DIR}/Werld/include 
   CACHE PATH "Path from where to start to parse"
 )
 list(JOIN DOC_INPUT_ROOT_DIRS_LIST " " DOC_INPUT_ROOT_DIRS)

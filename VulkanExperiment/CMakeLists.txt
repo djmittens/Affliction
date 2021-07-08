@@ -14,17 +14,32 @@ set(PROJECT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # find_package(glfw REQUIRED)
 # find_package(glm REQUIRED)
-# find_package(Vulkan REQUIRED)
+find_package(Vulkan REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(glfw3 3.3.0 CONFIG REQUIRED)
+find_package(GTest CONFIG REQUIRED)
 
-add_library(VulkanExperiment src/experiment.cpp )
+# find_package(Boost 1.70.0 REQUIRED COMPONENTS log)
+# string formatting for yo face !
+find_package(fmt CONFIG REQUIRED)
 
-target_include_directories(VulkanExperiment PUBLIC 
-    glfw::glfw 
-    glm::glm 
-    ${Vulkan_INCLUDE_DIR}
-    ${PROJECT_INCLUDE_DIR})
-    # "$<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>")
-target_link_libraries(VulkanExperiment PUBLIC glfw::glfw glm::glm PRIVATE ${Vulkan_LIBRARIES})
+add_library(VulkanExperiment SHARED src/experiment.cpp src/logging.cpp)
+
+# target_include_directories(VulkanExperiment INTERFACE ${PROJECT_INCLUDE_DIR})
+
+target_include_directories(VulkanExperiment 
+PUBLIC
+"$<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>"
+
+PRIVATE
+    ${Boost_INCLUDE_DIR}
+    glfw
+    glm
+    Vulkan::Vulkan
+    )
+
+# target_link_libraries(VulkanExperiment PRIVATE glfw glm Boost::log Vulkan::Vulkan)
+target_link_libraries(VulkanExperiment PRIVATE glfw glm Vulkan::Vulkan fmt::fmt fmt::fmt-header-only)
 
 # this is a hack for now until i learn more about the different C++ features and work through the compilation
 target_compile_features(VulkanExperiment PUBLIC cxx_std_17)

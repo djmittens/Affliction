@@ -5,8 +5,10 @@
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <array>
+// #include <boost/bind.hpp>
 #include <cstdint>
 #include <cstdlib>
+#include <fmt/format.h>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -15,8 +17,11 @@
 #include <stdexcept>
 #include <vector>
 
+
 // Files and shit
 #include <fstream>
+
+// #include <boost/log/trivial.hpp>
 
 /*
   Some serious TODO list for me to tackle at some point on this project.
@@ -66,7 +71,15 @@ IApplication::~IApplication() {}
 
 class HelloTriangleApplication : public IApplication {
 public:
-  void run() override {
+  HelloTriangleApplication() {
+    // TODO i need to get rid of this thing.
+    // UNUSED(p_logger);
+    //auto logger = vke::log::LazyLogger(vke::log::fileLogger("logs/vulkan.log"));
+    // m_logger = std::make_unique<vke::log::LazyLogger>(std::move(logger));
+    m_logger =  std::unique_ptr<vke::log::LazyLogger>(new vke::log::LazyLogger(vke::log::fileLogger("logs/vulkan.log")));
+  }
+  void run(std::vector<std::string> args) final override  {
+    UNUSED(args);
     initWindow();
     initVulkan();
     mainLoop();
@@ -74,6 +87,7 @@ public:
   }
 
 private:
+  // Useful junk for logging to somewhere
   // Window junk i dunno
   GLFWwindow *window = nullptr;
 
@@ -110,7 +124,16 @@ private:
       VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
   const std::vector<const char *> validationLayers = {
-      "VK_LAYER_KHRONOS_validation"};
+      // "VK_LAYER_KHRONOS_validation"
+      // aparantly this is a new type of validation layer that comes with the lunarg implementation? but why is the other one not working?
+      /// thats also hilarious
+      "VK_LAYER_LUNARG_standard_validation"
+      };
+
+  /**
+   * my spiffy little logging implementation.
+   */
+  std::unique_ptr<vke::log::LazyLogger> m_logger;
 
 #ifdef NDEBUG
   const bool enableValidationLayers = false;
@@ -149,11 +172,10 @@ private:
       vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount,
                                              extensions.data());
 
-      std::cout << "available extensions:" << vke::platform::ENDL;
+      m_logger->debug("available extensions:");
 
       for (const auto &extension : extensions) {
-        std::cout << vke::platform::TAB << extension.extensionName
-                  << vke::platform::ENDL;
+        m_logger->debug(vke::log::TAB + std::string(extension.extensionName));
       }
     }
   }
@@ -200,9 +222,10 @@ private:
     }
 
     if (VK_SUCCESS != vkCreateInstance(&createInfo, nullptr, &instance)) {
+
       throw std::runtime_error("failed to create a vulkan instance!");
     } else {
-      std::cout << "Successfully created a Vulkan instance !!!!" << ENDL;
+      m_logger->debug("Successfully created a Vulkan instance !!!!");
     }
   }
 
@@ -211,7 +234,7 @@ private:
     if (!enableValidationLayers)
       return;
 
-    std::cout << "setting up the debug messenger." << ENDL;
+    m_logger->debug("setting up the debug messenger.");
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
     populateDebugMessengerCreateInfo(createInfo);
@@ -239,6 +262,7 @@ private:
                              VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 
     createInfo.pfnUserCallback = debugCallback;
+    // boost::bind(debugCallback, m_logger, _1, _2, _3, _4);
     createInfo.pUserData = nullptr;
   }
 
@@ -320,9 +344,10 @@ private:
       auto [rating, d] = *candidates.rbegin();
 
       if (rating > 0) {
-        std::cout
-            << "Found a suitable physical device i can use! with a score of: "
-            << rating << ENDL;
+        m_logger->debug(fmt::format(
+            "Found a suitable physical device i can  use! with a score of: {}",
+            rating));
+
         physicalDevice = d;
       } else {
         throw std::runtime_error("failed to find a suitable GPU!");
@@ -397,7 +422,7 @@ private:
       }
 
       if (!requiredExtensions.empty()) {
-        std::cout << "required extensions were not found on a device" << ENDL;
+        m_logger->error("required extensions were not found on a device");
         return 0;
       }
     }
@@ -575,7 +600,11 @@ private:
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0,
                      &presentationQueue);
 
-    std::cout << "created a logical device !" << ENDL;
+    // std::cout << "created a logical device !" << ENDL;
+    // BOOST_LOG_TRIVIAL(debug) << "created a logical device !";
+    // vke::log::debug() << "created a logical device !";
+    m_logger->debug("created a logical device !");
+    // m_logger->info("created a logical device !");
   }
 
   void createSwapChain() {
@@ -613,14 +642,29 @@ private:
                                         indices.presentFamily.value()};
 
       if (indices.graphicsFamily != indices.presentFamily) {
-        std::cout << "creating the slow VK_SHARING_MODE_CONCURRENT mode "
-                  << ENDL;
+        // std::cout << "creating the slow VK_SHARING_MODE_CONCURRENT mode "
+        //           << ENDL;
+        // BOOST_LOG_TRIVIAL(debug)
+        //     << "creating the slow VK_SHARING_MODE_CONCURRENT mode ";
+        // vke::log::debug()
+        //     << "creating the slow VK_SHARING_MODE_CONCURRENT mode ";
+        m_logger->debug("creating the slow VK_SHARING_MODE_CONCURRENT mode ");
+        // m_logger->info(
+        //     std::string("creating the slow VK_SHARING_MODE_CONCURRENT
+        //     mode"));
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         createInfo.queueFamilyIndexCount = 2;
         createInfo.pQueueFamilyIndices = queueFamilyIndicies;
       } else {
-        std::cout << "creating the fast VK_SHARING_MODE_EXCLUSIVE mode "
-                  << ENDL;
+        // std::cout << "creating the fast VK_SHARING_MODE_EXCLUSIVE mode "
+        //           << ENDL;
+        // BOOST_LOG_TRIVIAL(debug)
+        //     << "creating the fast VK_SHARING_MODE_EXCLUSIVE mode";
+        // vke::log::debug() << "creating the fast VK_SHARING_MODE_EXCLUSIVE
+        // mode";
+        m_logger->debug("creating the fast VK_SHARING_MODE_EXCLUSIVE mode");
+        // m_logger->info("creating the fast VK_SHARING_MODE_EXCLUSIVE mode ");
+
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         createInfo.queueFamilyIndexCount = 0;
         createInfo.pQueueFamilyIndices = nullptr;
@@ -1137,7 +1181,8 @@ private:
                 void *pUserData) {
     UNUSED(messageType);
     UNUSED(pUserData);
-    std::cout << "validation layer::" << pCallbackData->pMessage << ENDL;
+    // TODO: figure how to bind a logger to this callback :()
+    // vke::log::debug() << "validation layer::" << pCallbackData->pMessage;
 
     if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
       // An important message that we would show.
@@ -1253,10 +1298,9 @@ private:
   }
 };
 
-std::unique_ptr<IApplication> createApplication(const int p_width,
-                                                const int p_height) {
-  UNUSED(p_width);
-  UNUSED(p_height);
-  return std::unique_ptr<IApplication>(new HelloTriangleApplication);
+std::unique_ptr<IApplication> createApplication() {
+  // auto logger = std::shared_ptr<vke::platform::logging::NoOpLogger>(
+  //     new vke::platform::logging::NoOpLogger());
+  return std::unique_ptr<IApplication>(new HelloTriangleApplication());
 }
 } // namespace vke::platform

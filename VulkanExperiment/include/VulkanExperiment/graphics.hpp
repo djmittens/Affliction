@@ -2,7 +2,7 @@
 
 #include "logging.hpp"
 
-namespace vke::platform {
+namespace vke::platform::graphics {
 /**
  * @brief This is a pretty awesome interface to allow you to interact with the
  * graphics hardware.  Pretty rudamentary stuff.
@@ -17,7 +17,7 @@ public:
   virtual void initializeSurface() = 0;
 };
 
-IWindowGraphics createWindow();
+IWindowGraphics createWindow(const SCreateWindow settings);
 
 struct SCreateWindow {
   int height = 0;
@@ -27,6 +27,11 @@ struct SCreateWindow {
     height = p_height;
     return *this;
   };
+
+  SCreateWindow &withWidth(int p_width) {
+    width = p_width;
+    return *this;
+  };
 };
 
-} // namespace vke::platform
+} // namespace vke::platform::graphics
